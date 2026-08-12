@@ -1,0 +1,111 @@
+# ==================================================
+# CivicLens Root .gitignore
+# ==================================================
+
+# --------------------------------------------------
+# Secrets & Environment Variables
+# --------------------------------------------------
+.env
+.env.*
+!.env.example
+
+# --------------------------------------------------
+# Python / Flask / Pytest
+# --------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+.venv/
+venv/
+env/
+ENV/
+
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# --------------------------------------------------
+# Node / React / Package Managers
+# --------------------------------------------------
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# --------------------------------------------------
+# Build Outputs & Coverage
+# --------------------------------------------------
+dist/
+build/
+coverage/
+
+# --------------------------------------------------
+# IDE / Editor Files
+# --------------------------------------------------
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# --------------------------------------------------
+# Temporary & Log Files
+# --------------------------------------------------
+*.tmp
+*.temp
+*.log
+
+# --------------------------------------------------
+# Scratch & Temporary Test Files
+# --------------------------------------------------
+scratch/
+tmp/
+temp/
+
+# --------------------------------------------------
+# AI / RAG Models, Vector Indexes & Local Caches
+# --------------------------------------------------
+*.bin
+*.gguf
+*.safetensors
+*.pt
+*.pth
+*.pkl
+index_cache.pkl
+
+.cache/
+models/
+vector_store/
+embeddings_cache/
+
+# --------------------------------------------------
+# Local Database & Data Store Artifacts
+# --------------------------------------------------
+*.db
+*.sqlite
+*.sqlite3
+backend/data_store/*.json
+
+# --------------------------------------------------
+# Agent Instructions, Skills & Local Tooling / Media
+# --------------------------------------------------
+.agent/
+.agents/
+.claude/
+.claude-plugin/
+.gemini/
+.kiro/
+agents/
+assets/
+hooks/
+plugins/
+skill-creator/
+skills/
+ui-ux-pro-max-skill/
+instructions/
+
+AGENTS.md
+CLAUDE.md
