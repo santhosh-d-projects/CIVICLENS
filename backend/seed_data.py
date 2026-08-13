@@ -490,7 +490,10 @@ def seed_database():
         }
     ]
     for p in projects:
-        projects_col.update_one({"id": p["id"]}, {"$set": p}, upsert=True)
+        if not projects_col.find_one({"id": p["id"]}):
+            projects_col.insert_one(p)
+        else:
+            projects_col.update_one({"id": p["id"]}, {"$set": p})
 
     # ── 6. Project Updates ─────────────────────────────────────
     updates_col = db.get_collection("project_updates")
@@ -552,7 +555,10 @@ def seed_database():
         }
     ]
     for u in updates:
-        updates_col.update_one({"id": u["id"]}, {"$set": u}, upsert=True)
+        if not updates_col.find_one({"id": u["id"]}):
+            updates_col.insert_one(u)
+        else:
+            updates_col.update_one({"id": u["id"]}, {"$set": u})
 
     # ── 7. Citizen Observations ────────────────────────────────
     obs_col = db.get_collection("citizen_observations")

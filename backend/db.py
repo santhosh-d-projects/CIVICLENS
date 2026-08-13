@@ -42,6 +42,9 @@ class FileCollection:
                 if "$in" in val:
                     if item.get(key) not in val["$in"]:
                         return False
+                if "$nin" in val:
+                    if item.get(key) in val["$nin"]:
+                        return False
                 if "$regex" in val:
                     import re
                     pattern = val["$regex"]
@@ -82,7 +85,7 @@ class FileCollection:
                 self.inserted_id = inserted_id
         return InsertResult(doc_copy["_id"])
 
-    def update_one(self, query: Dict[str, Any], update: Dict[str, Any]) -> bool:
+    def update_one(self, query: Dict[str, Any], update: Dict[str, Any], upsert: bool = False) -> bool:
         data = self._load_data()
         updated = False
         for item in data:
@@ -97,6 +100,20 @@ class FileCollection:
                         item[k].append(v)
                 updated = True
                 break
+        if not updated and upsert:
+            new_doc = dict(query)
+            if "$set" in update:
+                new_doc.update(update["$set"])
+            if "_id" not in new_doc and "id" in new_doc:
+                new_doc["_id"] = new_doc["id"]
+            elif "_id" not in new_doc:
+                import uuid
+                new_doc["_id"] = str(uuid.uuid4())
+                if "id" not in new_doc:
+                    new_doc["id"] = new_doc["_id"]
+            data.append(new_doc)
+            updated = True
+
         if updated:
             self._save_data(data)
         return updated
@@ -109,6 +126,15 @@ class FileCollection:
             self._save_data(data)
             return True
         return False
+
+    def delete_many(self, query: Dict[str, Any]) -> int:
+        data = self._load_data()
+        initial_len = len(data)
+        data = [item for item in data if not self._match(item, query)]
+        deleted_count = initial_len - len(data)
+        if deleted_count > 0:
+            self._save_data(data)
+        return deleted_count
 
     def count_documents(self, query: Optional[Dict[str, Any]] = None) -> int:
         return len(self.find(query))
