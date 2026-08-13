@@ -202,11 +202,11 @@ def seed_database():
             "startDate": "2026-01-10",
             "expectedCompletionDate": "2026-06-30",
             "actualCompletionDate": None,
-            "officialProgress": 0,
+            "officialProgress": 70,
             "status": "ONGOING",
             "statusLabel": "Ongoing",
-            "contractorId": "con-3",
-            "contractorName": "ABC Constructions",
+            "contractorId": "con-1",
+            "contractorName": "Rajesh Infra & Construction Pvt Ltd",
             "isPublished": True,
             "milestones": [],
             "sources": [],
@@ -354,7 +354,7 @@ def seed_database():
             "startDate": "2025-12-01",
             "expectedCompletionDate": "2026-11-30",
             "actualCompletionDate": None,
-            "officialProgress": 0,
+            "officialProgress": 30,
             "status": "ONGOING",
             "statusLabel": "Ongoing",
             "contractorId": "con-3",
@@ -450,14 +450,199 @@ def seed_database():
             "createdAt": "2026-01-05T09:00:00Z",
             "updatedAt": "2026-08-11T16:00:00Z",
         },
+        {
+            "id": "proj-301",
+            "name": "Civic Center Solar Installation",
+            "description": (
+                "Installation of 50kW grid-connected rooftop solar panels at the Ward 12 Civic Center "
+                "to provide renewable power and reduce utility costs. (CivicLens Demonstration Data)"
+            ),
+            "category": "Solar Energy",
+            "department": "BBMP Electrical Department",
+            "ward": "Ward 12",
+            "location": {"lat": 12.9715, "lng": 77.5940, "address": "Civic Center, Ward 12, Bengaluru"},
+            "budget": {
+                "allocated": 1500000,
+                "released": 1500000,
+                "reportedExpenditure": 1500000,
+                "remaining": 0,
+                "year": "2025-2026",
+                "source": "State Solar Subsidy Scheme (Demo data)",
+            },
+            "startDate": "2026-02-01",
+            "expectedCompletionDate": "2026-08-01",
+            "actualCompletionDate": "2026-08-01",
+            "officialProgress": 100,
+            "status": "COMPLETED",
+            "statusLabel": "Completed",
+            "contractorId": "con-3",
+            "contractorName": "ABC Constructions",
+            "isPublished": True,
+            "milestones": [
+                {"title": "Feasibility & Roof Prep", "dueDate": "2026-03-01", "status": "Completed", "progress": 100},
+                {"title": "Panel & Inverter Assembly", "dueDate": "2026-06-01", "status": "Completed", "progress": 100},
+                {"title": "Grid Connection & Testing", "dueDate": "2026-08-01", "status": "Completed", "progress": 100},
+            ],
+            "sources": [],
+            "createdBy": "u-gov-demo",
+            "createdAt": "2026-01-15T09:00:00Z",
+            "updatedAt": "2026-08-01T10:00:00Z",
+        }
     ]
     for p in projects:
-        if not projects_col.find_one({"id": p["id"]}):
-            projects_col.insert_one(p)
-        else:
-            projects_col.update_one({"id": p["id"]}, {"$set": p})
+        projects_col.update_one({"id": p["id"]}, {"$set": p}, upsert=True)
 
-    logger.info("CivicLens Milestone 2 demo data seeded successfully.")
+    # ── 6. Project Updates ─────────────────────────────────────
+    updates_col = db.get_collection("project_updates")
+    updates_col.delete_many({"id": {"$nin": ["upd-demo-approved", "upd-demo-pending"]}})
+    updates = [
+        {
+            "id": "upd-demo-approved",
+            "projectId": "proj-001",
+            "projectName": "Ward 12 Road Development",
+            "contractorId": "con-1",
+            "contractorName": "Rajesh Infra & Construction Pvt Ltd",
+            "submittedBy": "Arun Bhat",
+            "progressPercentage": 70,
+            "description": "Road excavation, leveling and primary grading completed across the full stretch.",
+            "milestone": "Excavation and Grading",
+            "delayReason": "",
+            "evidence": [
+                {
+                    "fileName": "site_grading_complete.jpg",
+                    "fileType": "JPG",
+                    "fileReference": "https://images.unsplash.com/photo-1541888946425-d0fbb186a5b3?auto=format&fit=crop&w=800&q=80",
+                    "uploadedBy": "Arun Bhat",
+                    "uploadedAt": "2026-08-05T10:00:00Z"
+                }
+            ],
+            "status": "APPROVED",
+            "governmentComment": "Site verified. Works match the reported progress level.",
+            "reviewedBy": "Dr. Ramesh (BBMP Chief Engineer)",
+            "reviewedAt": "2026-08-06T15:30:00Z",
+            "submittedAt": "2026-08-05T10:00:00Z",
+            "updatedAt": "2026-08-06T15:30:00Z"
+        },
+        {
+            "id": "upd-demo-pending",
+            "projectId": "proj-001",
+            "projectName": "Ward 12 Road Development",
+            "contractorId": "con-1",
+            "contractorName": "Rajesh Infra & Construction Pvt Ltd",
+            "submittedBy": "Arun Bhat",
+            "progressPercentage": 75,
+            "description": "Secondary grading, curb stone installation and utility duct alignment progress.",
+            "milestone": "Curb and Ducting",
+            "delayReason": "Shortage of raw material transport delays caused minor curb casting setbacks.",
+            "evidence": [
+                {
+                    "fileName": "curbs_and_ducting.jpg",
+                    "fileType": "JPG",
+                    "fileReference": "https://images.unsplash.com/photo-1590069261209-f8e9b8642343?auto=format&fit=crop&w=800&q=80",
+                    "uploadedBy": "Arun Bhat",
+                    "uploadedAt": "2026-08-12T11:00:00Z"
+                }
+            ],
+            "status": "PENDING",
+            "governmentComment": None,
+            "reviewedBy": None,
+            "reviewedAt": None,
+            "submittedAt": "2026-08-12T11:00:00Z",
+            "updatedAt": "2026-08-12T11:00:00Z"
+        }
+    ]
+    for u in updates:
+        updates_col.update_one({"id": u["id"]}, {"$set": u}, upsert=True)
+
+    # ── 7. Citizen Observations ────────────────────────────────
+    obs_col = db.get_collection("citizen_observations")
+    obs_col.delete_many({"id": {"$nin": ["obs-demo-1", "obs-demo-2", "obs-demo-3"]}})
+    observations = [
+        {
+            "id": "obs-demo-1",
+            "projectId": "proj-001",
+            "projectName": "Ward 12 Road Development",
+            "citizenId": "u-cit-demo",
+            "citizenName": "Citizen Observation",
+            "citizenEmail": "citizen@civiclens.demo",
+            "observationType": "PROGRESS_OBSERVATION",
+            "description": "The western section of the road near the school appears unfinished. (CivicLens Demonstration Data)",
+            "observationText": "The western section of the road near the school appears unfinished. (CivicLens Demonstration Data)",
+            "location": {
+                "description": "Near Ward 12 Government School",
+                "lat": 12.9718,
+                "lng": 77.5948
+            },
+            "evidence": [
+                {
+                    "fileName": "unfinished_road.jpg",
+                    "fileType": "JPG",
+                    "fileReference": "https://images.unsplash.com/photo-1515162305285-0293e4767cc2?auto=format&fit=crop&w=800&q=80",
+                    "uploadedBy": "Citizen",
+                    "uploadedAt": "2026-08-12T12:00:00Z"
+                }
+            ],
+            "photoUrl": "https://images.unsplash.com/photo-1515162305285-0293e4767cc2?auto=format&fit=crop&w=800&q=80",
+            "status": "SUBMITTED",
+            "verificationStatus": "SUBMITTED",
+            "createdAt": "2026-08-12T12:00:00Z",
+            "updatedAt": "2026-08-12T12:00:00Z"
+        },
+        {
+            "id": "obs-demo-2",
+            "projectId": "proj-001",
+            "projectName": "Ward 12 Road Development",
+            "citizenId": "u-cit-demo",
+            "citizenName": "Citizen Observation",
+            "citizenEmail": "citizen@civiclens.demo",
+            "observationType": "SITE_CONDITION",
+            "description": "Drainage work is still visible along the northern side of the road. (CivicLens Demonstration Data)",
+            "observationText": "Drainage work is still visible along the northern side of the road. (CivicLens Demonstration Data)",
+            "location": {
+                "description": "Northern Stretch, Ward 12",
+                "lat": 12.9720,
+                "lng": 77.5950
+            },
+            "evidence": [],
+            "photoUrl": "https://images.unsplash.com/photo-1517649763962-0c623266010b?auto=format&fit=crop&w=800&q=80",
+            "status": "ACKNOWLEDGED",
+            "verificationStatus": "ACKNOWLEDGED",
+            "governmentComment": "Observation received and referred for site verification. (CivicLens Demonstration Data)",
+            "reviewedBy": "Dr. Ramesh (BBMP Chief Engineer)",
+            "reviewedAt": "2026-08-12T16:00:00Z",
+            "createdAt": "2026-08-12T13:00:00Z",
+            "updatedAt": "2026-08-12T16:00:00Z"
+        },
+        {
+            "id": "obs-demo-3",
+            "projectId": "proj-001",
+            "projectName": "Ward 12 Road Development",
+            "citizenId": "u-cit-demo",
+            "citizenName": "Citizen Observation",
+            "citizenEmail": "citizen@civiclens.demo",
+            "observationType": "COMPLETION_OBSERVATION",
+            "description": "Traffic is currently using the completed section while construction continues near the junction. (CivicLens Demonstration Data)",
+            "observationText": "Traffic is currently using the completed section while construction continues near the junction. (CivicLens Demonstration Data)",
+            "location": {
+                "description": "Junction Area, Ward 12",
+                "lat": 12.9712,
+                "lng": 77.5942
+            },
+            "evidence": [],
+            "photoUrl": "https://images.unsplash.com/photo-1517649763962-0c623266010b?auto=format&fit=crop&w=800&q=80",
+            "status": "SUBMITTED",
+            "verificationStatus": "SUBMITTED",
+            "createdAt": "2026-08-12T14:00:00Z",
+            "updatedAt": "2026-08-12T14:00:00Z"
+        }
+    ]
+    for o in observations:
+        if not obs_col.find_one({"id": o["id"]}):
+            obs_col.insert_one(o)
+        else:
+            obs_col.update_one({"id": o["id"]}, {"$set": o})
+
+    logger.info("CivicLens Milestone 4 demo data seeded successfully.")
 
 
 if __name__ == "__main__":

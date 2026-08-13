@@ -23,9 +23,10 @@ class CitationBuilder:
             if key not in seen:
                 seen.add(key)
                 source_obj = {
+                    "documentId": doc_id,
+                    "documentName": doc_name,
                     "document": doc_name,
                     "page": page_num,
-                    "documentId": doc_id,
                     "projectId": chunk.get("projectId")
                 }
                 structured_sources.append(source_obj)

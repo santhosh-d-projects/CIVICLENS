@@ -30,8 +30,20 @@ def create_app():
     app.config.from_object(Config)
     app.json = CustomJSONProvider(app)
 
-    # Enable CORS for React Frontend
-    CORS(app, resources={r"/api/*": {"origins": "*"}})
+    # Enable CORS for React Frontend, restricted to FRONTEND_URL in production
+    frontend_url = app.config.get("FRONTEND_URL", "*")
+    cors_origins = "*" if frontend_url == "*" else [frontend_url, "http://localhost:5173", "http://127.0.0.1:5173"]
+    CORS(app, resources={r"/api/*": {"origins": cors_origins}})
+
+    # Setup upload directory
+    upload_dir = os.path.join(os.path.dirname(__file__), "uploads")
+    os.makedirs(upload_dir, exist_ok=True)
+    app.config["UPLOAD_FOLDER"] = upload_dir
+
+    from flask import send_from_directory
+    @app.route("/api/uploads/<path:filename>")
+    def serve_upload(filename):
+        return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
 
     # Run Database Seed
     try:

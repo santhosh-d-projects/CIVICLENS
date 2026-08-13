@@ -19,13 +19,22 @@ export const GovernmentDashboard = () => {
   const navigate = useNavigate();
   const [projects, setProjects] = useState([]);
   const [stats, setStats] = useState(null);
+  const [pendingUpdates, setPendingUpdates] = useState([]);
+  const [pendingObservations, setPendingObservations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [riskFilter, setRiskFilter] = useState('');
   const [pubFilter, setPubFilter] = useState('');
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const [toast, setToast] = useState(null);
+
+  // Observation review states
+  const [reviewObs, setReviewObs] = useState(null);
+  const [obsComment, setObsComment] = useState('');
+  const [submittingObs, setSubmittingObs] = useState(false);
+  const [obsErrors, setObsErrors] = useState([]);
 
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
@@ -37,21 +46,26 @@ export const GovernmentDashboard = () => {
     try {
       const params = new URLSearchParams();
       if (statusFilter) params.append('status', statusFilter);
+      if (riskFilter)   params.append('riskStatus', riskFilter);
       if (pubFilter)    params.append('published', pubFilter);
       if (search)       params.append('search', search);
 
-      const [projRes, statsRes] = await Promise.all([
+      const [projRes, statsRes, updatesRes, obsRes] = await Promise.all([
         api.get(`/government/projects?${params}`),
         api.get('/government/stats'),
+        api.get('/government/updates?status=PENDING'),
+        api.get('/government/observations?status=SUBMITTED')
       ]);
       if (projRes.data.success)  setProjects(projRes.data.projects);
       if (statsRes.data.success) setStats(statsRes.data.stats);
+      if (updatesRes.data.success) setPendingUpdates(updatesRes.data.updates || []);
+      if (obsRes.data.success) setPendingObservations(obsRes.data.observations || []);
     } catch (err) {
       console.error('Dashboard fetch failed:', err);
     } finally {
       setLoading(false);
     }
-  }, [search, statusFilter, pubFilter]);
+  }, [search, statusFilter, riskFilter, pubFilter]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
@@ -78,6 +92,50 @@ export const GovernmentDashboard = () => {
       showToast('Failed to delete project.', 'error');
     } finally {
       setDeleting(false);
+    }
+  };
+
+  const handleAcknowledgeObs = async (obsId) => {
+    setObsErrors([]);
+    setSubmittingObs(true);
+    try {
+      const res = await api.post(`/government/observations/${obsId}/acknowledge`, {
+        governmentComment: obsComment.trim()
+      });
+      if (res.data.success) {
+        showToast('Observation acknowledged successfully.');
+        setReviewObs(null);
+        setObsComment('');
+        fetchData();
+      }
+    } catch (err) {
+      setObsErrors([err.response?.data?.error || 'Failed to acknowledge observation.']);
+    } finally {
+      setSubmittingObs(false);
+    }
+  };
+
+  const handleDismissObs = async (obsId) => {
+    setObsErrors([]);
+    if (!obsComment.trim()) {
+      setObsErrors(['A dismissal reason (comment) is required to dismiss an observation.']);
+      return;
+    }
+    setSubmittingObs(true);
+    try {
+      const res = await api.post(`/government/observations/${obsId}/dismiss`, {
+        governmentComment: obsComment.trim()
+      });
+      if (res.data.success) {
+        showToast('Observation dismissed successfully.');
+        setReviewObs(null);
+        setObsComment('');
+        fetchData();
+      }
+    } catch (err) {
+      setObsErrors([err.response?.data?.error || 'Failed to dismiss observation.']);
+    } finally {
+      setSubmittingObs(false);
     }
   };
 
@@ -203,6 +261,120 @@ export const GovernmentDashboard = () => {
           </div>
         )}
 
+        {/* Pending Contractor Updates Queue */}
+        {pendingUpdates.length > 0 && (
+          <div className="cl-card p-5 space-y-4">
+            <h2 className="text-sm font-bold uppercase tracking-wider" style={{ color: 'var(--ink-muted)' }}>
+              Pending Contractor Updates ({pendingUpdates.length})
+            </h2>
+            <div className="overflow-x-auto">
+              <table className="cl-table" aria-label="Pending updates review queue">
+                <thead>
+                  <tr>
+                    <th>Project</th>
+                    <th>Contractor</th>
+                    <th className="text-center">Official</th>
+                    <th className="text-center">Proposed</th>
+                    <th className="text-center">Delta</th>
+                    <th className="hidden sm:table-cell text-center">Submitted</th>
+                    <th className="text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pendingUpdates.map(u => {
+                    const baselineProgress = projects.find(p => p.id === u.projectId)?.officialProgress || 0;
+                    const diff = u.progressPercentage - baselineProgress;
+                    return (
+                      <tr key={u.id}>
+                        <td>
+                          <div className="font-semibold text-sm truncate max-w-xs">{u.projectName}</div>
+                          <div className="text-[10px]" style={{ color: 'var(--ink-subtle)' }}>{u.id}</div>
+                        </td>
+                        <td className="text-sm" style={{ color: 'var(--ink-muted)' }}>{u.contractorName}</td>
+                        <td className="text-center font-mono" style={{ color: 'var(--ink-muted)' }}>
+                          {baselineProgress}%
+                        </td>
+                        <td className="text-center font-mono font-bold" style={{ color: 'var(--ink-accent)' }}>{u.progressPercentage}%</td>
+                        <td className="text-center font-mono font-bold" style={{ color: diff >= 0 ? 'var(--status-completed-text)' : 'var(--status-delayed-text)' }}>
+                          {diff >= 0 ? `+${diff}` : diff}%
+                        </td>
+                        <td className="hidden sm:table-cell text-center text-xs font-mono" style={{ color: 'var(--ink-subtle)' }}>
+                          {u.submittedAt ? new Date(u.submittedAt).toLocaleDateString() : ''}
+                        </td>
+                        <td className="text-right">
+                          <button
+                            id={`btn-review-${u.id}`}
+                            onClick={() => navigate(`/government/updates/${u.id}`)}
+                            className="cl-btn cl-btn--primary cl-btn--sm"
+                            aria-label={`Review update for ${u.projectName}`}
+                          >
+                            Review
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* Citizen Observations Queue */}
+        {pendingObservations.length > 0 && (
+          <div className="cl-card p-5 space-y-4">
+            <h2 className="text-sm font-bold uppercase tracking-wider" style={{ color: 'var(--ink-muted)' }}>
+              Pending Citizen Observations ({pendingObservations.length})
+            </h2>
+            <div className="overflow-x-auto">
+              <table className="cl-table" aria-label="Pending citizen observations review queue">
+                <thead>
+                  <tr>
+                    <th>Project</th>
+                    <th>Type</th>
+                    <th className="hidden sm:table-cell">Observation Description</th>
+                    <th className="hidden md:table-cell text-center">Submitted</th>
+                    <th className="text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pendingObservations.map(obs => (
+                    <tr key={obs.id}>
+                      <td>
+                        <div className="font-semibold text-sm truncate max-w-xs">{obs.projectName}</div>
+                        <div className="text-[10px]" style={{ color: 'var(--ink-subtle)' }}>{obs.id}</div>
+                      </td>
+                      <td className="text-xs font-semibold" style={{ color: 'var(--ink-muted)' }}>
+                        {obs.observationType?.replace('_', ' ')}
+                      </td>
+                      <td className="hidden sm:table-cell text-xs max-w-xs truncate" style={{ color: 'var(--ink-muted)' }}>
+                        {obs.description || obs.observationText}
+                      </td>
+                      <td className="hidden md:table-cell text-center text-xs font-mono" style={{ color: 'var(--ink-subtle)' }}>
+                        {obs.createdAt ? new Date(obs.createdAt).toLocaleDateString() : ''}
+                      </td>
+                      <td className="text-right">
+                        <button
+                          id={`btn-review-obs-${obs.id}`}
+                          onClick={() => {
+                            setReviewObs(obs);
+                            setObsComment('');
+                            setObsErrors([]);
+                          }}
+                          className="cl-btn cl-btn--secondary cl-btn--sm"
+                          aria-label={`Review observation ${obs.id}`}
+                        >
+                          Review
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
         {/* ── Filter + Search ── */}
         <form
           onSubmit={handleSearchSubmit}
@@ -236,6 +408,19 @@ export const GovernmentDashboard = () => {
             {PROJECT_STATUSES.map(s => (
               <option key={s.value} value={s.value}>{s.label}</option>
             ))}
+          </select>
+          <select
+            value={riskFilter}
+            onChange={e => setRiskFilter(e.target.value)}
+            className="cl-input"
+            style={{ width: 'auto', padding: '0.5rem 0.75rem' }}
+            aria-label="Filter by risk status"
+          >
+            <option value="">All risk levels</option>
+            <option value="ON_TRACK">On Track</option>
+            <option value="AT_RISK">At Risk</option>
+            <option value="BEHIND">Behind</option>
+            <option value="COMPLETED">Completed</option>
           </select>
           <select
             value={pubFilter}
@@ -280,6 +465,7 @@ export const GovernmentDashboard = () => {
                     <th className="hidden sm:table-cell">Ward</th>
                     <th className="hidden md:table-cell">Budget</th>
                     <th>Status</th>
+                    <th>Risk</th>
                     <th className="hidden lg:table-cell">Published</th>
                     <th className="text-right">Actions</th>
                   </tr>
@@ -303,6 +489,32 @@ export const GovernmentDashboard = () => {
                       </td>
                       <td>
                         <StatusPill status={p.status} />
+                      </td>
+                      <td>
+                        {p.assessment ? (
+                          <span
+                            className="status-pill text-[10px] font-bold uppercase tracking-wider border cl-explainer"
+                            data-tip={p.assessment.assessment.reasons?.join(' · ') || 'Assessment details'}
+                            style={{
+                              color: p.assessment.assessment.status === 'COMPLETED' ? 'var(--status-completed-text)'
+                                   : p.assessment.assessment.status === 'ON_TRACK' ? 'var(--status-completed-text)'
+                                   : p.assessment.assessment.status === 'AT_RISK' ? 'var(--status-atrisk-text)'
+                                   : 'var(--status-delayed-text)',
+                              backgroundColor: p.assessment.assessment.status === 'COMPLETED' ? 'var(--status-completed-bg)'
+                                             : p.assessment.assessment.status === 'ON_TRACK' ? 'var(--status-completed-bg)'
+                                             : p.assessment.assessment.status === 'AT_RISK' ? 'var(--status-atrisk-bg)'
+                                             : 'var(--status-delayed-bg)',
+                              borderColor: p.assessment.assessment.status === 'COMPLETED' ? 'var(--status-completed-border)'
+                                         : p.assessment.assessment.status === 'ON_TRACK' ? 'var(--status-completed-border)'
+                                         : p.assessment.assessment.status === 'AT_RISK' ? 'var(--status-atrisk-border)'
+                                         : 'var(--status-delayed-border)'
+                            }}
+                          >
+                            {p.assessment.assessment.status?.replace('_', ' ')}
+                          </span>
+                        ) : (
+                          <span className="text-ink-subtle">—</span>
+                        )}
                       </td>
                       <td className="hidden lg:table-cell">
                         <button
@@ -346,6 +558,149 @@ export const GovernmentDashboard = () => {
                   ))}
                 </tbody>
               </table>
+            </div>
+          </div>
+        )}
+
+        {/* Citizen Observation Review Modal */}
+        {reviewObs && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto"
+            style={{ background: 'rgba(0,0,0,0.7)' }}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Review Citizen Observation"
+          >
+            <div className="cl-card max-w-lg w-full p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+              <div className="flex justify-between items-center pb-2 border-b" style={{ borderColor: 'var(--ink-border)' }}>
+                <h3 className="text-base font-bold">Review Citizen Observation</h3>
+                <button
+                  onClick={() => setReviewObs(null)}
+                  className="text-ink-subtle hover:text-ink-text text-sm font-semibold"
+                >
+                  Close
+                </button>
+              </div>
+
+              {obsErrors.length > 0 && (
+                <div
+                  className="p-3 rounded text-xs"
+                  style={{ background: 'var(--status-delayed-bg)', color: 'var(--status-delayed-text)', border: '1px solid var(--status-delayed-border)' }}
+                >
+                  {obsErrors[0]}
+                </div>
+              )}
+
+              {/* Meta */}
+              <div className="space-y-2 text-xs">
+                <div>
+                  <span className="text-ink-subtle block font-semibold uppercase tracking-wider">Project</span>
+                  <span className="text-sm font-bold text-ink-text">{reviewObs.projectName}</span>
+                </div>
+                <div>
+                  <span className="text-ink-subtle block font-semibold uppercase tracking-wider">Type</span>
+                  <span className="text-ink-text font-medium">{reviewObs.observationType?.replace('_', ' ')}</span>
+                </div>
+                <div>
+                  <span className="text-ink-subtle block font-semibold uppercase tracking-wider">Submitted By</span>
+                  <span className="text-ink-text font-medium">Citizen Observation</span>
+                </div>
+              </div>
+
+              {/* Description */}
+              <div className="p-3 rounded border text-sm" style={{ background: 'var(--ink-surface-2)', borderColor: 'var(--ink-border)' }}>
+                <span className="text-[10px] font-bold uppercase tracking-wider block mb-1 text-ink-muted">Citizen description</span>
+                <p className="text-ink-text leading-relaxed">{reviewObs.description || reviewObs.observationText}</p>
+              </div>
+
+              {/* Location details */}
+              {reviewObs.location && reviewObs.location.description && (
+                <div className="text-xs">
+                  <span className="text-ink-subtle block font-semibold uppercase tracking-wider">Landmark Location</span>
+                  <span className="text-ink-text font-mono">{reviewObs.location.description}</span>
+                  {reviewObs.location.lat && reviewObs.location.lng && (
+                    <span className="block text-[10px] text-ink-subtle mt-0.5 font-mono">
+                      Coordinates: {reviewObs.location.lat}, {reviewObs.location.lng}
+                    </span>
+                  )}
+                </div>
+              )}
+
+              {/* Evidence details */}
+              {reviewObs.evidence && reviewObs.evidence.length > 0 && (
+                <div className="space-y-2">
+                  <span className="text-ink-subtle block font-semibold uppercase tracking-wider text-xs">Submitted Evidence</span>
+                  {reviewObs.evidence.map((ev, index) => {
+                    const isImg = ['jpg', 'jpeg', 'png'].includes((ev.fileType || '').toLowerCase());
+                    return (
+                      <div
+                        key={index}
+                        className="p-2.5 rounded border flex items-center justify-between gap-3"
+                        style={{ background: 'var(--ink-surface-2)', borderColor: 'var(--ink-border)' }}
+                      >
+                        <div className="min-w-0">
+                          <p className="text-xs font-semibold truncate max-w-[200px]">{ev.fileName}</p>
+                          <p className="font-mono text-[9px] text-ink-subtle">{ev.fileType}</p>
+                        </div>
+                        <a
+                          href={ev.fileReference}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="cl-btn cl-btn--secondary cl-btn--xs px-2 py-1 text-xs no-underline"
+                        >
+                          View file
+                        </a>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Feedback comment input */}
+              <div className="space-y-1.5">
+                <label htmlFor="field-review-obs-comment" className="cl-label block font-bold">
+                  Government Comment / Rejection Reason
+                </label>
+                <textarea
+                  id="field-review-obs-comment"
+                  value={obsComment}
+                  onChange={e => setObsComment(e.target.value)}
+                  placeholder="Provide review details. Rejection dismissal requires a reason..."
+                  className="cl-input text-sm"
+                  rows={3}
+                  required
+                />
+                <p className="text-[10px]" style={{ color: 'var(--ink-subtle)' }}>
+                  * A comment is <span className="font-semibold text-status-delayed-text">mandatory to dismiss</span> an observation.
+                </p>
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-2 pt-2">
+                <button
+                  onClick={() => setReviewObs(null)}
+                  className="cl-btn cl-btn--secondary flex-1"
+                  disabled={submittingObs}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => handleDismissObs(reviewObs.id)}
+                  id="btn-dismiss-obs"
+                  className="cl-btn cl-btn--danger flex-1"
+                  disabled={submittingObs}
+                >
+                  Dismiss
+                </button>
+                <button
+                  onClick={() => handleAcknowledgeObs(reviewObs.id)}
+                  id="btn-acknowledge-obs"
+                  className="cl-btn cl-btn--primary flex-1"
+                  disabled={submittingObs}
+                >
+                  Acknowledge
+                </button>
+              </div>
             </div>
           </div>
         )}

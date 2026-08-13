@@ -38,8 +38,13 @@ class VectorIndex:
 
         # Filter candidate indices if project_id is provided
         candidate_indices = []
+        project_id_aliases = {project_id} if project_id else set()
+        if project_id in ("P001", "proj-001"):
+            project_id_aliases.update(["P001", "proj-001"])
+
         for idx, chunk in enumerate(self.chunks):
-            if project_id is None or chunk.get("projectId") == project_id:
+            chunk_pid = chunk.get("projectId")
+            if project_id is None or chunk_pid in project_id_aliases:
                 candidate_indices.append(idx)
 
         if not candidate_indices:

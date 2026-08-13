@@ -1,0 +1,57 @@
+warning: in the working copy of '.gitignore', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'ai-prototype/README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'ai-prototype/scripts/generate_demo_docs.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'ai-prototype/scripts/serve.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'ai-prototype/src/citations/builder.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'ai-prototype/src/retrieval/index.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/app.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/config.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/routes/ai.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/routes/citizen.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/routes/contractor.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/routes/government.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/routes/health.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/routes/projects.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/seed_data.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/App.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/components/Navbar.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/components/shared.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/constants/civic.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/index.css', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/pages/CitizenDashboard.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/pages/ContractorDashboard.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/pages/ExploreProjectsPage.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/pages/GovernmentDashboard.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/pages/ProjectDetailPage.jsx', LF will be replaced by CRLF the next time Git touches it
+ .gitignore                                         |   2 [32m+[m
+ README.md                                          |  39 [32m+[m[31m-[m
+ ai-prototype/README.md                             |  26 [32m+[m[31m-[m
+ .../documents/demo/ward12_budget_report.pdf        | Bin [31m10387[m -> [32m10143[m bytes
+ .../documents/demo/ward12_progress_report.pdf      | Bin [31m10626[m -> [32m10638[m bytes
+ .../documents/demo/ward12_project_report.pdf       | Bin [31m13543[m -> [32m13871[m bytes
+ .../documents/demo/ward12_tender_report.pdf        | Bin [31m7795[m -> [32m7714[m bytes
+ ai-prototype/scripts/generate_demo_docs.py         | 140 [32m+++[m[31m--[m
+ ai-prototype/scripts/serve.py                      | 141 [32m+++[m[31m--[m
+ ai-prototype/src/citations/builder.py              |   3 [32m+[m[31m-[m
+ ai-prototype/src/retrieval/index.py                |   7 [32m+[m[31m-[m
+ backend/app.py                                     |  16 [32m+[m[31m-[m
+ backend/config.py                                  |   2 [32m+[m
+ backend/routes/ai.py                               | 156 [32m++++[m[31m-[m
+ backend/routes/citizen.py                          | 235 [32m++++++[m[31m--[m
+ backend/routes/contractor.py                       | 174 [32m+++++[m[31m-[m
+ backend/routes/government.py                       | 287 [32m+++++++[m[31m--[m
+ backend/routes/health.py                           |   2 [32m+[m[31m-[m
+ backend/routes/projects.py                         |  66 [32m++[m[31m-[m
+ backend/seed_data.py                               | 201 [32m++++++[m[31m-[m
+ frontend/src/App.jsx                               |  36 [32m++[m
+ frontend/src/components/Navbar.jsx                 |   7 [32m+[m[31m-[m
+ frontend/src/components/shared.jsx                 |  99 [32m+++[m[31m-[m
+ frontend/src/constants/civic.js                    |  13 [32m+[m[31m-[m
+ frontend/src/index.css                             | 118 [32m++[m[31m--[m
+ frontend/src/pages/CitizenDashboard.jsx            | 361 [32m+++++++++++[m[31m-[m
+ frontend/src/pages/ContractorDashboard.jsx         |  39 [32m+[m[31m-[m
+ frontend/src/pages/ExploreProjectsPage.jsx         |  21 [32m+[m[31m-[m
+ frontend/src/pages/GovernmentDashboard.jsx         | 359 [32m+++++++++++[m[31m-[m
+ frontend/src/pages/ProjectDetailPage.jsx           | 638 [32m+++++++++++++++++++[m[31m--[m
+ 30 files changed, 2766 insertions(+), 422 deletions(-)

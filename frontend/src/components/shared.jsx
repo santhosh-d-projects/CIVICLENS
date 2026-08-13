@@ -40,10 +40,15 @@ export function StatusPill({ status, className = '' }) {
 // ── TrustLabel ─────────────────────────────────────────────────
 // Source provenance — shape + color + text. First-class visual object.
 const TRUST_ICONS = {
-  OFFICIAL:   <FileText size={9} aria-hidden="true" />,
-  CONTRACTOR: <HardHat  size={9} aria-hidden="true" />,
-  CITIZEN:    <Eye      size={9} aria-hidden="true" />,
-  UNVERIFIED: <HelpCircle size={9} aria-hidden="true" />,
+  OFFICIAL:             <FileText size={9} aria-hidden="true" />,
+  CONTRACTOR:           <HardHat  size={9} aria-hidden="true" />,
+  CITIZEN:              <Eye      size={9} aria-hidden="true" />,
+  UNVERIFIED:           <HelpCircle size={9} aria-hidden="true" />,
+  PENDING_VERIFICATION: <Clock    size={9} aria-hidden="true" />,
+  REJECTED:             <AlertCircle size={9} aria-hidden="true" />,
+  CITIZEN_OBSERVATION:  <Eye      size={9} aria-hidden="true" />,
+  ACKNOWLEDGED:         <CheckCircle2 size={9} aria-hidden="true" />,
+  DISMISSED:            <MinusCircle  size={9} aria-hidden="true" />,
 };
 
 export function TrustLabel({ type = 'UNVERIFIED', className = '' }) {
@@ -123,7 +128,16 @@ export function ProgressBar({ pct = 0, status, showLabel = true, className = '' 
 // Visual comparison: promised timeline vs today's date.
 // Renders: static if completed or on track; overrun segment if delayed.
 // Degrades to static widths under prefers-reduced-motion.
-export function PromiseRealityBar({ startDate, expectedDate, status, className = '' }) {
+export function PromiseRealityBar({
+  startDate,
+  expectedDate,
+  status,
+  officialProgress = 0,
+  expectedProgress = null,
+  progressGap = null,
+  showGapDetails = false,
+  className = ''
+}) {
   if (!startDate || !expectedDate) return null;
 
   const start = new Date(startDate);
@@ -139,20 +153,37 @@ export function PromiseRealityBar({ startDate, expectedDate, status, className =
   const daysDelta = Math.round((today - expected) / (1000 * 60 * 60 * 24));
   const overrunPct = isOverrun ? Math.min((daysDelta / (totalPromised / (1000 * 60 * 60 * 24))) * 100, 40) : 0;
 
+  // Derive expected progress if not explicitly passed
+  let calcExpected = expectedProgress;
+  if (calcExpected === null) {
+    if (today >= expected) {
+      calcExpected = 100;
+    } else if (today <= start) {
+      calcExpected = 0;
+    } else {
+      calcExpected = Math.round((elapsed / totalPromised) * 100);
+    }
+  }
+
+  // Derive gap if not explicitly passed
+  const calcGap = progressGap !== null ? progressGap : (calcExpected - officialProgress);
+
   return (
     <div className={`${className}`} aria-label={isOverrun ? `${daysDelta} days past expected completion` : 'On track'}>
       <div className="flex justify-between items-center mb-1.5">
-        <span className="text-xs text-ink-muted">Timeline</span>
+        <span className="text-xs text-ink-muted">Timeline Progress</span>
         {isOverrun ? (
           <span className="font-mono text-xs font-semibold" style={{ color: 'var(--status-delayed-text)' }}>
-            +{daysDelta} days
+            Overrun: +{daysDelta} days
           </span>
         ) : (
           <span className="font-mono text-xs text-ink-muted">
-            Due {expectedDate}
+            Target: {expectedDate}
           </span>
         )}
       </div>
+
+      {/* Progress Bar Track */}
       <div className="pvr-bar-track bg-ink-surface-2 border border-ink-border" style={{ borderRadius: '9999px', height: '6px', position: 'relative', overflow: 'visible' }}>
         {/* Promised fill (elapsed portion) */}
         <div
@@ -172,13 +203,59 @@ export function PromiseRealityBar({ startDate, expectedDate, status, className =
           />
         )}
       </div>
-      <div className="flex justify-between mt-1">
-        <span className="font-mono text-[10px] text-ink-subtle">{startDate}</span>
+
+      <div className="flex justify-between mt-1 mb-2">
+        <span className="font-mono text-[10px] text-ink-subtle">Start: {startDate}</span>
         <span className={`font-mono text-[10px] ${isOverrun ? '' : 'text-ink-subtle'}`}
           style={isOverrun ? { color: 'var(--status-delayed-text)' } : {}}>
-          {expectedDate}
+          Due: {expectedDate}
         </span>
       </div>
+
+      {/* Structured Promise vs Reality vs Gap Details */}
+      {showGapDetails && (
+        <div
+          className="mt-3 p-3 rounded-lg border space-y-3"
+          style={{ background: 'var(--ink-surface-2)', borderColor: 'var(--ink-border)' }}
+        >
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-left">
+            <div>
+              <span className="text-ink-muted uppercase block text-[9px] font-bold tracking-wider mb-0.5">Promise</span>
+              <p className="text-xs font-semibold leading-snug text-ink-text">
+                Expected Completion:<br />
+                <span className="font-mono font-bold text-ink-text">{expectedDate}</span>
+              </p>
+            </div>
+            <div>
+              <span className="text-ink-muted uppercase block text-[9px] font-bold tracking-wider mb-0.5">Reality</span>
+              <p className="text-xs font-semibold leading-snug text-ink-text">
+                Official Progress:<br />
+                <span className="font-mono font-bold" style={{ color: 'var(--status-completed-text)' }}>{officialProgress}%</span> Government Verified
+              </p>
+            </div>
+            <div>
+              <span className="text-ink-muted uppercase block text-[9px] font-bold tracking-wider mb-0.5">Gap</span>
+              <p className="text-xs font-semibold leading-snug text-ink-text">
+                Status Variance:<br />
+                {calcGap > 0 ? (
+                  <span className="font-mono font-bold" style={{ color: 'var(--status-delayed-text)' }}>
+                    -{calcGap} percentage points
+                  </span>
+                ) : (
+                  <span className="font-mono font-bold" style={{ color: 'var(--status-completed-text)' }}>
+                    On Track
+                  </span>
+                )}
+              </p>
+            </div>
+          </div>
+          {calcGap > 0 && (
+            <p className="text-[10px] text-ink-subtle italic border-t pt-2" style={{ borderColor: 'var(--ink-border)' }}>
+              * Gap represents the variance between the expected progress ({calcExpected}%) and the official progress ({officialProgress}%).
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 }

@@ -94,9 +94,12 @@ def get_projects():
     status = request.args.get("status", "").strip()
     category = request.args.get("category", "").strip()
     search = request.args.get("search", "").strip().lower()
+    risk_status_filter = request.args.get("riskStatus", "").strip().upper()
 
     all_projects = projects_col.find({})
     filtered = []
+
+    from services.project_risk import assess_project_risk
 
     for p in all_projects:
         # Only published projects on the public endpoint
@@ -125,6 +128,26 @@ def get_projects():
         pr = calculate_promise_reality(p)
         p["delayDays"] = pr["delayDays"]
         p["transparencyScore"] = calculate_transparency_score(p)
+
+        # Retrieve observations and updates for risk assessment
+        obs_col = db.get_collection("citizen_observations")
+        observations = []
+        for obs in obs_col.find({"projectId": p["id"]}):
+            obs_copy = dict(obs)
+            obs_copy.pop("citizenEmail", None)
+            obs_copy.pop("citizenPhone", None)
+            obs_copy["citizenName"] = "Citizen Observation"
+            observations.append(obs_copy)
+
+        updates_col = db.get_collection("project_updates")
+        updates = list(updates_col.find({"projectId": p["id"]}))
+
+        assessment_data = assess_project_risk(p, observations, updates)
+        p["assessment"] = assessment_data
+
+        if risk_status_filter and assessment_data["assessment"]["status"] != risk_status_filter:
+            continue
+
         filtered.append(p)
 
     return jsonify({"success": True, "count": len(filtered), "projects": filtered}), 200
@@ -155,10 +178,19 @@ def get_project_by_id(project_id):
     updates = list(updates_col.find({"projectId": project_id}))
 
     obs_col = db.get_collection("citizen_observations")
-    observations = list(obs_col.find({"projectId": project_id}))
+    observations = []
+    for obs in obs_col.find({"projectId": project_id}):
+        obs_copy = dict(obs)
+        obs_copy.pop("citizenEmail", None)
+        obs_copy.pop("citizenPhone", None)
+        obs_copy["citizenName"] = "Citizen Observation"
+        observations.append(obs_copy)
 
     audit_col = db.get_collection("audit_logs")
     audit_trail = list(audit_col.find({"projectId": project_id}))
+
+    from services.project_risk import assess_project_risk
+    assessment_data = assess_project_risk(p, observations, updates)
 
     return jsonify({
         "success": True,
@@ -166,7 +198,39 @@ def get_project_by_id(project_id):
         "contractorUpdates": updates,
         "citizenObservations": observations,
         "auditTrail": audit_trail,
+        "assessment": assessment_data
     }), 200
+
+
+@projects_bp.route("/<project_id>/assessment", methods=["GET"])
+def get_project_assessment(project_id):
+    db = get_db()
+    projects_col = db.get_collection("projects")
+    p = projects_col.find_one({"id": project_id})
+    if not p:
+        return jsonify({"success": False, "error": "Project not found."}), 404
+        
+    user = get_current_user()
+    is_admin = user and user.get("role") in ("GOVERNMENT_ADMIN", "CIVICLENS_ADMIN")
+    if not p.get("isPublished", False) and not is_admin:
+        return jsonify({"success": False, "error": "Project not found."}), 404
+        
+    obs_col = db.get_collection("citizen_observations")
+    observations = []
+    for obs in obs_col.find({"projectId": project_id}):
+        obs_copy = dict(obs)
+        obs_copy.pop("citizenEmail", None)
+        obs_copy.pop("citizenPhone", None)
+        obs_copy["citizenName"] = "Citizen Observation"
+        observations.append(obs_copy)
+        
+    updates_col = db.get_collection("project_updates")
+    updates = list(updates_col.find({"projectId": project_id}))
+    
+    from services.project_risk import assess_project_risk
+    assessment_data = assess_project_risk(p, observations, updates)
+    
+    return jsonify({"success": True, "assessment": assessment_data}), 200
 
 
 @projects_bp.route("/<project_id>/follow", methods=["POST"])

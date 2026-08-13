@@ -90,11 +90,13 @@ def audit(db, project_id, action, details, user, source_ref=None):
 @government_bp.route("/stats", methods=["GET"])
 def get_dashboard_stats():
     user = get_current_user()
+    if not user:
+        return jsonify({"success": False, "error": "Authentication required."}), 401
     if not is_govt_admin(user):
         return jsonify({"success": False, "error": "Government Admin authorization required."}), 403
 
     db = get_db()
-    all_p = db.get_collection("projects").find({})
+    all_p = list(db.get_collection("projects").find({}))
 
     total_projects = len(all_p)
     published = len([p for p in all_p if p.get("isPublished")])
@@ -117,8 +119,8 @@ def get_dashboard_stats():
         d = p.get("department", "Unknown")
         dept_dist[d] = dept_dist.get(d, 0) + 1
 
-    pending_updates = len(db.get_collection("project_updates").find({"status": "PENDING_REVIEW"}))
-    unverified_obs = len(db.get_collection("citizen_observations").find({"verificationStatus": "UNVERIFIED"}))
+    pending_updates = len(list(db.get_collection("project_updates").find({"status": {"$in": ["PENDING", "PENDING_REVIEW"]}})))
+    unverified_obs = len(list(db.get_collection("citizen_observations").find({"verificationStatus": "UNVERIFIED"})))
 
     return jsonify({
         "success": True,
@@ -357,18 +359,23 @@ def delete_project(project_id):
 @government_bp.route("/projects", methods=["GET"])
 def list_projects_admin():
     user = get_current_user()
+    if not user:
+        return jsonify({"success": False, "error": "Authentication required."}), 401
     if not is_govt_admin(user):
         return jsonify({"success": False, "error": "Government Admin authorization required."}), 403
 
     db = get_db()
-    all_projects = db.get_collection("projects").find({})
+    all_projects = list(db.get_collection("projects").find({}))
 
     status_filter = request.args.get("status", "").strip()
     dept_filter = request.args.get("department", "").strip()
     pub_filter = request.args.get("published", "").strip()  # "true" / "false" / ""
     search = request.args.get("search", "").strip().lower()
+    risk_status_filter = request.args.get("riskStatus", "").strip().upper()
 
     filtered = []
+    from services.project_risk import assess_project_risk
+
     for p in all_projects:
         if status_filter and p.get("status", "").upper() != status_filter.upper():
             continue
@@ -384,6 +391,19 @@ def list_projects_admin():
             ]).lower()
             if search not in haystack:
                 continue
+
+        # Fetch observations and updates for risk assessment
+        obs_col = db.get_collection("citizen_observations")
+        observations = list(obs_col.find({"projectId": p["id"]}))
+        updates_col = db.get_collection("project_updates")
+        updates = list(updates_col.find({"projectId": p["id"]}))
+
+        assessment_data = assess_project_risk(p, observations, updates)
+        p["assessment"] = assessment_data
+
+        if risk_status_filter and assessment_data["assessment"]["status"] != risk_status_filter:
+            continue
+
         filtered.append(p)
 
     return jsonify({"success": True, "count": len(filtered), "projects": filtered}), 200
@@ -423,18 +443,31 @@ def db_get():
 
 
 # ── Contractor update review ───────────────────────────────────
-@government_bp.route("/contractor-updates/<update_id>/review", methods=["POST"])
-def review_contractor_update(update_id):
+@government_bp.route("/updates", methods=["GET"])
+def list_updates():
     user = get_current_user()
     if not is_govt_admin(user):
         return jsonify({"success": False, "error": "Government Admin authorization required."}), 403
 
-    data = request.get_json() or {}
-    action = data.get("action", "").upper()
-    notes = data.get("notes", "")
+    db = get_db()
+    status_filter = request.args.get("status", "").strip()
 
-    if action not in ("APPROVED", "REJECTED"):
-        return jsonify({"success": False, "error": "Action must be APPROVED or REJECTED."}), 400
+    query = {}
+    if status_filter:
+        query["status"] = status_filter
+    else:
+        # Default to showing all updates
+        pass
+
+    updates = list(db.get_collection("project_updates").find(query))
+    return jsonify({"success": True, "updates": updates}), 200
+
+
+@government_bp.route("/updates/<update_id>", methods=["GET"])
+def get_update_details(update_id):
+    user = get_current_user()
+    if not is_govt_admin(user):
+        return jsonify({"success": False, "error": "Government Admin authorization required."}), 403
 
     db = get_db()
     updates_col = db.get_collection("project_updates")
@@ -442,33 +475,210 @@ def review_contractor_update(update_id):
     if not update:
         return jsonify({"success": False, "error": "Contractor update not found."}), 404
 
+    projects_col = db.get_collection("projects")
+    project = projects_col.find_one({"id": update["projectId"]})
+
+    previous_updates = list(updates_col.find({
+        "projectId": update["projectId"],
+        "id": {"$ne": update_id}
+    }))
+
+    return jsonify({
+        "success": True,
+        "update": update,
+        "project": project,
+        "previousUpdates": previous_updates
+    }), 200
+
+@government_bp.route("/updates/<update_id>/approve", methods=["POST"])
+def approve_update(update_id):
+    user = get_current_user()
+    if not is_govt_admin(user):
+        return jsonify({"success": False, "error": "Government Admin authorization required."}), 403
+
+    data = request.get_json() or {}
+    gov_comment = data.get("governmentComment", "").strip()
+
+    db = get_db()
+    updates_col = db.get_collection("project_updates")
+    update = updates_col.find_one({"id": update_id})
+    if not update:
+        return jsonify({"success": False, "error": "Contractor update not found."}), 404
+
+    if update.get("status") not in ("PENDING", "PENDING_REVIEW"):
+        return jsonify({"success": False, "error": "This update has already been reviewed."}), 400
+
     now_iso = datetime.datetime.utcnow().isoformat() + "Z"
+    
     updates_col.update_one({"id": update_id}, {"$set": {
-        "status": action,
+        "status": "APPROVED",
         "reviewedBy": user.get("name"),
-        "reviewDate": now_iso,
-        "reviewNotes": notes,
+        "reviewedAt": now_iso,
+        "governmentComment": gov_comment or "Progress verified against the submitted project update.",
+        "updatedAt": now_iso
     }})
 
+    projects_col = db.get_collection("projects")
+    project = projects_col.find_one({"id": update["projectId"]})
+    if project:
+        new_pct = update.get("progressPercentage", 0)
+        new_status = "COMPLETED" if new_pct >= 100 else project.get("status", "ONGOING")
+        projects_col.update_one({"id": update["projectId"]}, {"$set": {
+            "officialProgress": new_pct,
+            "status": new_status,
+            "updatedAt": now_iso
+        }})
+    
+    audit(db, update["projectId"], "CONTRACTOR_UPDATE_APPROVED",
+          f"Admin approved contractor update of {update.get('progressPercentage')}%. Comment: {gov_comment}",
+          user, f"Admin Review #{update_id}")
+
+    return jsonify({"success": True, "message": "Contractor update approved and official progress updated."}), 200
+
+@government_bp.route("/updates/<update_id>/reject", methods=["POST"])
+def reject_update(update_id):
+    user = get_current_user()
+    if not is_govt_admin(user):
+        return jsonify({"success": False, "error": "Government Admin authorization required."}), 403
+
+    data = request.get_json() or {}
+    gov_comment = data.get("governmentComment", "").strip()
+
+    if not gov_comment:
+        return jsonify({"success": False, "error": "Rejection reason (government comment) is required."}), 400
+
+    db = get_db()
+    updates_col = db.get_collection("project_updates")
+    update = updates_col.find_one({"id": update_id})
+    if not update:
+        return jsonify({"success": False, "error": "Contractor update not found."}), 404
+
+    if update.get("status") not in ("PENDING", "PENDING_REVIEW"):
+        return jsonify({"success": False, "error": "This update has already been reviewed."}), 400
+
+    now_iso = datetime.datetime.utcnow().isoformat() + "Z"
+    
+    updates_col.update_one({"id": update_id}, {"$set": {
+        "status": "REJECTED",
+        "reviewedBy": user.get("name"),
+        "reviewedAt": now_iso,
+        "governmentComment": gov_comment,
+        "updatedAt": now_iso
+    }})
+    
+    audit(db, update["projectId"], "CONTRACTOR_UPDATE_REJECTED",
+          f"Admin rejected contractor update of {update.get('progressPercentage')}%. Reason: {gov_comment}",
+          user, f"Admin Review #{update_id}")
+
+    return jsonify({"success": True, "message": "Contractor update rejected. Official progress remains unchanged."}), 200
+
+# Keep legacy route for backward compatibility
+@government_bp.route("/contractor-updates/<update_id>/review", methods=["POST"])
+def review_contractor_update(update_id):
+    user = get_current_user()
+    if not is_govt_admin(user):
+        return jsonify({"success": False, "error": "Government Admin authorization required."}), 403
+    data = request.get_json() or {}
+    action = data.get("action", "").upper()
+    notes = data.get("notes", "")
     if action == "APPROVED":
-        projects_col = db.get_collection("projects")
-        proj = projects_col.find_one({"id": update["projectId"]})
-        if proj:
-            new_pct = update.get("progressPercentage", 0)
-            new_status = "COMPLETED" if new_pct >= 100 else proj.get("status", "ONGOING")
-            projects_col.update_one({"id": update["projectId"]}, {"$set": {
-                "officialProgress": new_pct,
-                "status": new_status,
-                "updatedAt": now_iso,
-            }})
-        audit(db, update["projectId"], "CONTRACTOR_UPDATE_APPROVED",
-              f"Admin approved contractor update of {update.get('progressPercentage')}%. Notes: {notes}",
-              user)
-
-    return jsonify({"success": True, "message": f"Contractor update marked {action}."}), 200
+        return approve_update(update_id)
+    else:
+        return reject_update(update_id)
 
 
-# ── Citizen observation verify ─────────────────────────────────
+# ── Citizen observations review queue ───────────────────────────
+@government_bp.route("/observations", methods=["GET"])
+def list_observations():
+    user = get_current_user()
+    if not is_govt_admin(user):
+        return jsonify({"success": False, "error": "Government Admin authorization required."}), 403
+
+    db = get_db()
+    status_filter = request.args.get("status", "").strip().upper()
+
+    query = {}
+    if status_filter:
+        query["status"] = status_filter
+
+    observations = list(db.get_collection("citizen_observations").find(query))
+    return jsonify({"success": True, "observations": observations}), 200
+
+
+@government_bp.route("/observations/<obs_id>/acknowledge", methods=["POST"])
+def acknowledge_observation(obs_id):
+    user = get_current_user()
+    if not is_govt_admin(user):
+        return jsonify({"success": False, "error": "Government Admin authorization required."}), 403
+
+    data = request.get_json() or {}
+    gov_comment = (data.get("governmentComment") or "").strip()
+
+    db = get_db()
+    obs_col = db.get_collection("citizen_observations")
+    obs = obs_col.find_one({"id": obs_id})
+    if not obs:
+        return jsonify({"success": False, "error": "Observation not found."}), 404
+
+    now_iso = datetime.datetime.utcnow().isoformat() + "Z"
+    
+    # Update status to ACKNOWLEDGED
+    obs_col.update_one({"id": obs_id}, {"$set": {
+        "status": "ACKNOWLEDGED",
+        "verificationStatus": "ACKNOWLEDGED", # legacy compat
+        "governmentComment": gov_comment,
+        "reviewedBy": user.get("name"),
+        "reviewedAt": now_iso,
+        "updatedAt": now_iso
+    }})
+
+    # Log to audit trail
+    audit(db, obs.get("projectId", ""), "CITIZEN_OBSERVATION_ACKNOWLEDGED",
+          f"Observation {obs_id} acknowledged by Admin {user.get('name')}.",
+          user, f"Admin Review #{obs_id}")
+
+    return jsonify({"success": True, "message": "Observation acknowledged successfully."}), 200
+
+
+@government_bp.route("/observations/<obs_id>/dismiss", methods=["POST"])
+def dismiss_observation(obs_id):
+    user = get_current_user()
+    if not is_govt_admin(user):
+        return jsonify({"success": False, "error": "Government Admin authorization required."}), 403
+
+    data = request.get_json() or {}
+    gov_comment = (data.get("governmentComment") or "").strip()
+
+    if not gov_comment:
+        return jsonify({"success": False, "error": "A dismissal reason (government comment) is required."}), 400
+
+    db = get_db()
+    obs_col = db.get_collection("citizen_observations")
+    obs = obs_col.find_one({"id": obs_id})
+    if not obs:
+        return jsonify({"success": False, "error": "Observation not found."}), 404
+
+    now_iso = datetime.datetime.utcnow().isoformat() + "Z"
+    
+    # Update status to DISMISSED
+    obs_col.update_one({"id": obs_id}, {"$set": {
+        "status": "DISMISSED",
+        "verificationStatus": "DISMISSED", # legacy compat
+        "governmentComment": gov_comment,
+        "reviewedBy": user.get("name"),
+        "reviewedAt": now_iso,
+        "updatedAt": now_iso
+    }})
+
+    # Log to audit trail
+    audit(db, obs.get("projectId", ""), "CITIZEN_OBSERVATION_DISMISSED",
+          f"Observation {obs_id} dismissed by Admin {user.get('name')}. Reason: {gov_comment}",
+          user, f"Admin Review #{obs_id}")
+
+    return jsonify({"success": True, "message": "Observation dismissed successfully."}), 200
+
+
+# Keep legacy route for backward compatibility
 @government_bp.route("/citizen-observations/<obs_id>/verify", methods=["POST"])
 def verify_citizen_observation(obs_id):
     user = get_current_user()
@@ -477,16 +687,15 @@ def verify_citizen_observation(obs_id):
 
     data = request.get_json() or {}
     status = data.get("status", "VERIFIED").upper()
+    gov_comment = (data.get("governmentComment") or "").strip()
 
-    db = get_db()
-    obs_col = db.get_collection("citizen_observations")
-    obs = obs_col.find_one({"id": obs_id})
-    if not obs:
-        return jsonify({"success": False, "error": "Observation not found."}), 404
-
-    obs_col.update_one({"id": obs_id}, {"$set": {"verificationStatus": status}})
-    audit(db, obs.get("projectId", ""), f"OBSERVATION_{status}",
-          f"Observation by {obs.get('citizenName')} marked {status} by {user.get('name')}.",
-          user)
-
-    return jsonify({"success": True, "message": f"Observation status updated to {status}."}), 200
+    # Map generic verify call to acknowledge or dismiss
+    if status in ("ACKNOWLEDGED", "VERIFIED", "APPROVED"):
+        return acknowledge_observation(obs_id)
+    else:
+        # Rejections map to dismissals
+        if not gov_comment:
+            # Dismiss requires reason
+            data["governmentComment"] = "Dismissed via verification interface."
+            request.json = data
+        return dismiss_observation(obs_id)

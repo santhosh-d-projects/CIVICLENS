@@ -17,6 +17,7 @@
    ============================================================ */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import "leaflet/dist/leaflet.css";
 
 @tailwind base;
 @tailwind components;
@@ -25,57 +26,55 @@
 /* ── Design Tokens ─────────────────────────────────────────── */
 :root {
   /* Surfaces */
-  --ink-base:       #0C1117;  /* page bg */
-  --ink-surface:    #161B22;  /* card / panel */
-  --ink-surface-2:  #1C2128;  /* raised element */
-  --ink-border:     #21262D;  /* dividers, input outlines */
-  --ink-border-2:   #30363D;  /* stronger dividers */
+  --ink-base:       #FAF6F0;  /* page bg */
+  --ink-surface:    #FCF9F5;  /* card / panel */
+  --ink-surface-2:  #F3ECE2;  /* raised element */
+  --ink-border:     #E8DFD0;  /* dividers, input outlines */
+  --ink-border-2:   #D1C4AF;  /* stronger dividers */
 
   /* Typography */
-  --ink-text:       #E6EDF3;  /* primary body */
-  --ink-muted:      #8B949E;  /* secondary / metadata */
-  --ink-subtle:     #57606A;  /* timestamps, tertiary */
+  --ink-text:       #1C1814;  /* primary body */
+  --ink-muted:      #6E6254;  /* secondary / metadata */
+  --ink-subtle:     #9C8C7B;  /* timestamps, tertiary */
 
-  /* Structural accent — wayfinding only */
-  --ink-accent:     #2F81F7;  /* links, focus rings, active */
-  --ink-accent-bg:  rgba(47, 129, 247, 0.08);
+  /* Structural accent — Independence Day Theme */
+  --ink-accent:     #D97324;  /* Saffron primary accent */
+  --ink-accent-text:#C45A0E;  /* Saffron text links */
+  --ink-accent-bg:  rgba(217, 115, 36, 0.06);
+  --theme-green:    #3D5B43;  /* Green secondary accent */
+  --theme-green-bg: rgba(61, 91, 67, 0.06);
+  --ink-blue-link:  #1A63CB;  /* Functional deep blue */
 
-  /* Status semantic — functional, WCAG AA on dark bg */
-  /* Completed: L=0.365 → 7.8:1 on #0C1117 ✅ */
-  --status-completed-text:  #3FB950;
-  --status-completed-bg:    rgba(63, 185, 80, 0.08);
-  --status-completed-border: rgba(63, 185, 80, 0.2);
+  /* Status semantic — functional, light bg AA compliant */
+  --status-completed-text:  #226E35;
+  --status-completed-bg:    #E7F5E9;
+  --status-completed-border: #C6E7CD;
   
-  /* Ongoing: L=0.380 → 8.1:1 on #0C1117 ✅ */
-  --status-ongoing-text:    #58A6FF;
-  --status-ongoing-bg:      rgba(88, 166, 255, 0.08);
-  --status-ongoing-border:  rgba(88, 166, 255, 0.2);
+  --status-ongoing-text:    #1B5EBA;
+  --status-ongoing-bg:      #EBF3FC;
+  --status-ongoing-border:  #C8E0F9;
   
-  /* At Risk: L=0.515 → 10.7:1 on #0C1117 ✅ */
-  --status-atrisk-text:     #E3B341;
-  --status-atrisk-bg:       rgba(227, 179, 65, 0.08);
-  --status-atrisk-border:   rgba(227, 179, 65, 0.2);
+  --status-atrisk-text:     #8F6500;
+  --status-atrisk-bg:       #FDF7E7;
+  --status-atrisk-border:   #F6E4C1;
   
-  /* Delayed: L=0.358 → 7.7:1 on #0C1117 ✅ */
-  --status-delayed-text:    #F0789A;
-  --status-delayed-bg:      rgba(240, 120, 154, 0.08);
-  --status-delayed-border:  rgba(240, 120, 154, 0.2);
+  --status-delayed-text:    #C22F4E;
+  --status-delayed-bg:      #FDF2F4;
+  --status-delayed-border:  #F8D2DB;
   
-  /* No Update / Planned: L=0.307 → 6.7:1 on #0C1117 ✅ */
-  --status-planned-text:    #8B949E;
-  --status-planned-bg:      rgba(139, 148, 158, 0.08);
-  --status-planned-border:  rgba(139, 148, 158, 0.2);
+  --status-planned-text:    #595959;
+  --status-planned-bg:      #F0F0F0;
+  --status-planned-border:  #D9D9D9;
 
-  /* On Hold */
-  --status-onhold-text:     #D47A4F;
-  --status-onhold-bg:       rgba(212, 122, 79, 0.08);
-  --status-onhold-border:   rgba(212, 122, 79, 0.2);
+  --status-onhold-text:     #7A4B00;
+  --status-onhold-bg:       #FFF3E0;
+  --status-onhold-border:   #FFE0B2;
 
   /* Trust source labels */
-  --trust-official:     #3FB950;
-  --trust-contractor:   #E3B341;
-  --trust-citizen:      #58A6FF;
-  --trust-unverified:   #8B949E;
+  --trust-official:     #226E35;
+  --trust-contractor:   #8F6500;
+  --trust-citizen:      #1B5EBA;
+  --trust-unverified:   #595959;
 
   /* Type scale */
   --text-xs:   0.75rem;   /* 12px */
@@ -246,23 +245,33 @@
   }
   .trust-label--official {
     color: var(--trust-official);
-    border-color: rgba(63, 185, 80, 0.3);
-    background: rgba(63, 185, 80, 0.06);
+    border-color: var(--status-completed-border);
+    background: var(--status-completed-bg);
   }
   .trust-label--contractor {
     color: var(--trust-contractor);
-    border-color: rgba(227, 179, 65, 0.3);
-    background: rgba(227, 179, 65, 0.06);
+    border-color: var(--status-atrisk-border);
+    background: var(--status-atrisk-bg);
   }
   .trust-label--citizen {
     color: var(--trust-citizen);
-    border-color: rgba(88, 166, 255, 0.3);
-    background: rgba(88, 166, 255, 0.06);
+    border-color: var(--status-ongoing-border);
+    background: var(--status-ongoing-bg);
   }
   .trust-label--unverified {
     color: var(--trust-unverified);
-    border-color: rgba(139, 148, 158, 0.3);
-    background: rgba(139, 148, 158, 0.06);
+    border-color: var(--status-planned-border);
+    background: var(--status-planned-bg);
+  }
+  .trust-label--atrisk {
+    color: var(--status-atrisk-text);
+    border-color: var(--status-atrisk-border);
+    background: var(--status-atrisk-bg);
+  }
+  .trust-label--delayed {
+    color: var(--status-delayed-text);
+    border-color: var(--status-delayed-border);
+    background: var(--status-delayed-bg);
   }
 
   /* Form input */
@@ -326,7 +335,7 @@
     color: #ffffff;
   }
   .cl-btn--primary:hover:not(:disabled) {
-    background-color: #388BFD;
+    background-color: #B05510; /* darker saffron */
   }
   .cl-btn--secondary {
     background-color: var(--ink-surface-2);
@@ -338,12 +347,13 @@
     background-color: var(--ink-border);
   }
   .cl-btn--danger {
-    background-color: rgba(240, 120, 154, 0.12);
+    background-color: var(--status-delayed-bg);
     color: var(--status-delayed-text);
     border-color: var(--status-delayed-border);
   }
   .cl-btn--danger:hover:not(:disabled) {
-    background-color: rgba(240, 120, 154, 0.2);
+    opacity: 0.95;
+    background-color: var(--status-delayed-border);
   }
   .cl-btn--ghost {
     background-color: transparent;
@@ -425,7 +435,7 @@
     transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
   }
   .pvr-bar-fill--promised {
-    background-color: var(--status-ongoing-text);
+    background-color: var(--ink-accent);
   }
   .pvr-bar-fill--overrun {
     position: absolute;

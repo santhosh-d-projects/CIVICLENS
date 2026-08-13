@@ -10,8 +10,12 @@ import { RegisterPage } from './pages/RegisterPage';
 import { ExploreProjectsPage } from './pages/ExploreProjectsPage';
 import { ProjectDetailPage } from './pages/ProjectDetailPage';
 import { CitizenDashboard } from './pages/CitizenDashboard';
+import { ReportObservationPage } from './pages/ReportObservationPage';
 import { ContractorDashboard } from './pages/ContractorDashboard';
+import { ContractorProjectDetailPage } from './pages/ContractorProjectDetailPage';
+import { SubmitProgressPage } from './pages/SubmitProgressPage';
 import { GovernmentDashboard } from './pages/GovernmentDashboard';
+import { ReviewUpdatePage } from './pages/ReviewUpdatePage';
 import { ManageProjectsPage } from './pages/ManageProjectsPage';
 
 export function App() {
@@ -39,10 +43,34 @@ export function App() {
                 }
               />
               <Route
+                path="/citizen/projects/:projectId/observe"
+                element={
+                  <ProtectedRoute allowedRoles={['CITIZEN']}>
+                    <ReportObservationPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
                 path="/contractor/dashboard"
                 element={
                   <ProtectedRoute allowedRoles={['CONTRACTOR']}>
                     <ContractorDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/contractor/projects/:projectId"
+                element={
+                  <ProtectedRoute allowedRoles={['CONTRACTOR']}>
+                    <ContractorProjectDetailPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/contractor/projects/:projectId/update"
+                element={
+                  <ProtectedRoute allowedRoles={['CONTRACTOR']}>
+                    <SubmitProgressPage />
                   </ProtectedRoute>
                 }
               />
@@ -67,6 +95,14 @@ export function App() {
                 element={
                   <ProtectedRoute allowedRoles={['GOVERNMENT_ADMIN', 'CIVICLENS_ADMIN']}>
                     <ManageProjectsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/government/updates/:updateId"
+                element={
+                  <ProtectedRoute allowedRoles={['GOVERNMENT_ADMIN', 'CIVICLENS_ADMIN']}>
+                    <ReviewUpdatePage />
                   </ProtectedRoute>
                 }
               />

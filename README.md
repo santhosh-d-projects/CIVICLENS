@@ -118,8 +118,9 @@ Use these pre-configured credentials to test role-based access:
 
 ---
 
-## 6. Milestone 1 API Endpoints
+## 6. API Endpoints
 
+### Public Endpoints
 | Method | Endpoint | Protection | Description |
 |---|---|---|---|
 | `GET` | `/api/health` | Public | Health check & DB status |
@@ -129,15 +130,35 @@ Use these pre-configured credentials to test role-based access:
 | `GET` | `/api/projects` | Public | Browse & filter civic project directory |
 | `GET` | `/api/projects/:id` | Public | Get detailed project transparency breakdown |
 
+### Government Admin Endpoints
+| Method | Endpoint | Protection | Description |
+|---|---|---|---|
+| `GET` | `/api/government/projects` | Govt Admin | List all projects, including drafts |
+| `POST` | `/api/government/projects` | Govt Admin | Create new civic project |
+| `POST` | `/api/government/projects/:id/publish` | Govt Admin | Publish or unpublish a project |
+| `DELETE` | `/api/government/projects/:id` | Govt Admin | Delete a project |
+| `GET` | `/api/government/stats` | Govt Admin | Fetch compact admin stats strip |
+| `GET` | `/api/government/updates` | Govt Admin | List contractor updates queue |
+| `GET` | `/api/government/updates/:id` | Govt Admin | Fetch submission review details |
+| `POST` | `/api/government/updates/:id/approve` | Govt Admin | Approve contractor submission |
+| `POST` | `/api/government/updates/:id/reject` | Govt Admin | Reject contractor submission (requires comment) |
+
+### Contractor Endpoints
+| Method | Endpoint | Protection | Description |
+|---|---|---|---|
+| `GET` | `/api/contractor/projects` | Contractor | List contractor's assigned projects |
+| `POST` | `/api/contractor/upload-evidence` | Contractor | Upload PNG, JPG, JPEG, or PDF evidence (5MB limit) |
+| `POST` | `/api/contractor/projects/:id/updates` | Contractor | Submit progress report |
+| `GET` | `/api/contractor/projects/:id/updates` | Contractor | Retrieve contractor's update history |
+
 ---
 
 ## 7. Future Milestones Roadmap
 
-- **Milestone 2**: Project Management & Creation Workflow (Govt Admin)
-- **Milestone 3**: Contractor Progress & Photo Proof Submission Workflow
-- **Milestone 4**: Citizen Ground Observations & Photo Uploads
-- **Milestone 5**: Promise vs Reality Tracker & Neutral Delay Detector
-- **Milestone 6**: Interactive Leaflet Project Map with Status Color Markers
-- **Milestone 7**: Source-Backed RAG CivicLens AI Assistant & Doc Simplifier
-- **Milestone 8**: Regional Language Support (Kannada) & Web Speech Voice Queries
-- **Milestone 9**: End-to-End System Audit, Testing & Deployment
+- **Milestone 1-3**: Completed & Verified (Foundation, Auth, Admin project CRUD, Contractor updates, Evidence upload, Government review verification cycle).
+- **Milestone 4**: Citizen Ground Observations & Photo Uploads.
+- **Milestone 5**: Promise vs Reality Tracker & Neutral Delay Detector.
+- **Milestone 6**: Interactive Leaflet Project Map with Status Color Markers.
+- **Milestone 7**: Source-Backed RAG CivicLens AI Assistant & Doc Simplifier.
+- **Milestone 8**: Regional Language Support (Kannada) & Web Speech Voice Queries.
+- **Milestone 9**: End-to-End System Audit, Testing & Deployment.

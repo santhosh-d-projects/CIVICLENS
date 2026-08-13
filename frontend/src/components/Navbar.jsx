@@ -213,7 +213,12 @@ export const Navbar = () => {
 };
 
 function NavLink({ to, label, current, highlight }) {
-  const active = current === to || (to !== '/' && current.startsWith(to));
+  const active = current === to || (to !== '/' && (
+    current.startsWith(to) || 
+    (to.includes('/contractor') && current.startsWith('/contractor')) ||
+    (to.includes('/government') && current.startsWith('/government')) ||
+    (to.includes('/citizen') && current.startsWith('/citizen'))
+  ));
   return (
     <Link
       to={to}

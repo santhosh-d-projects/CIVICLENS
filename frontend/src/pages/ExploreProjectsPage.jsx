@@ -14,7 +14,7 @@ export const ExploreProjectsPage = () => {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [filters, setFilters] = useState({ ward: '', status: '', category: '', department: '' });
+  const [filters, setFilters] = useState({ ward: '', status: '', category: '', department: '', riskStatus: '' });
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [total, setTotal] = useState(0);
 
@@ -26,6 +26,7 @@ export const ExploreProjectsPage = () => {
       if (filters.status)     params.append('status', filters.status);
       if (filters.category)   params.append('category', filters.category);
       if (filters.department) params.append('department', filters.department);
+      if (filters.riskStatus) params.append('riskStatus', filters.riskStatus);
       if (search)             params.append('search', search);
 
       const res = await api.get(`/projects?${params.toString()}`);
@@ -127,12 +128,12 @@ export const ExploreProjectsPage = () => {
             className={`md:w-56 flex-shrink-0 ${filtersOpen ? 'block' : 'hidden'} md:block`}
             aria-label="Project filters"
           >
-            <div className="cl-card p-4 space-y-5">
+             <div className="cl-card p-4 space-y-5">
               <div className="flex items-center justify-between">
                 <span className="cl-section-label">Filters</span>
                 {activeFilterCount > 0 && (
                   <button
-                    onClick={() => setFilters({ ward: '', status: '', category: '', department: '' })}
+                    onClick={() => setFilters({ ward: '', status: '', category: '', department: '', riskStatus: '' })}
                     className="text-xs font-medium"
                     style={{ color: 'var(--ink-accent)' }}
                     aria-label="Clear all filters"
@@ -147,6 +148,20 @@ export const ExploreProjectsPage = () => {
                   value={filters.status}
                   onChange={v => setFilters(f => ({ ...f, status: v }))}
                   options={[{ value: '', label: 'All statuses' }, ...PROJECT_STATUSES.map(s => ({ value: s.value, label: s.label }))]}
+                />
+              </FilterGroup>
+
+              <FilterGroup label="Risk Assessment">
+                <FilterSelect
+                  value={filters.riskStatus}
+                  onChange={v => setFilters(f => ({ ...f, riskStatus: v }))}
+                  options={[
+                    { value: '', label: 'All risk levels' },
+                    { value: 'ON_TRACK', label: 'On Track' },
+                    { value: 'AT_RISK', label: 'At Risk' },
+                    { value: 'BEHIND', label: 'Behind' },
+                    { value: 'COMPLETED', label: 'Completed' }
+                  ]}
                 />
               </FilterGroup>
 

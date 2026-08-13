@@ -81,26 +81,19 @@ export const ContractorDashboard = () => {
                 <ContractorProjectRow
                   key={p.id}
                   project={p}
-                  onView={() => navigate(`/civic-projects/${p.id}`)}
+                  onView={() => navigate(`/contractor/projects/${p.id}`)}
+                  onReport={() => navigate(`/contractor/projects/${p.id}/update`)}
                 />
               ))}
             </div>
           )}
         </section>
-
-        {/* M3 notice */}
-        <div
-          className="mt-8 p-4 rounded-lg text-sm"
-          style={{ background: 'var(--ink-surface)', border: '1px solid var(--ink-border)', color: 'var(--ink-muted)' }}
-        >
-          Progress submission, photo uploads, and milestone updates will be available in the next platform update.
-        </div>
       </div>
     </div>
   );
 };
 
-function ContractorProjectRow({ project: p, onView }) {
+function ContractorProjectRow({ project: p, onView, onReport }) {
   const b = p.budget || {};
   return (
     <div
@@ -129,14 +122,24 @@ function ContractorProjectRow({ project: p, onView }) {
 
         <div className="flex flex-col items-end gap-2">
           <BudgetFigure amount={b.allocated} className="text-base font-bold" />
-          <button
-            id={`btn-view-${p.id}`}
-            onClick={onView}
-            className="cl-btn cl-btn--secondary cl-btn--sm"
-            aria-label={`View ${p.name}`}
-          >
-            <Eye size={14} /> View project
-          </button>
+          <div className="flex gap-2">
+            <button
+              id={`btn-view-${p.id}`}
+              onClick={onView}
+              className="cl-btn cl-btn--secondary cl-btn--sm"
+              aria-label={`View ${p.name}`}
+            >
+              View project
+            </button>
+            <button
+              id={`btn-report-${p.id}`}
+              onClick={onReport}
+              className="cl-btn cl-btn--primary cl-btn--sm"
+              aria-label={`Report progress for ${p.name}`}
+            >
+              Report progress
+            </button>
+          </div>
         </div>
       </div>
 

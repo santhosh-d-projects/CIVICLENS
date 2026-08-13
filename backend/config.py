@@ -9,3 +9,5 @@ class Config:
     MONGO_URI = os.environ.get("MONGO_URI", "mongodb://localhost:27017/civiclens")
     FLASK_ENV = os.environ.get("FLASK_ENV", "development")
     FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:5173")
+    AI_SERVICE_URL = os.environ.get("AI_SERVICE_URL", "http://127.0.0.1:8000")
+

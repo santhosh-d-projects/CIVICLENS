@@ -39,10 +39,15 @@ export const STATUS_CONFIG = {
 
 /** Trust source label config — used consistently across all screens */
 export const TRUST_CONFIG = {
-  OFFICIAL:    { label: 'Official', mod: 'official' },
-  CONTRACTOR:  { label: 'Contractor submitted', mod: 'contractor' },
-  CITIZEN:     { label: 'Citizen observation', mod: 'citizen' },
-  UNVERIFIED:  { label: 'Unverified', mod: 'unverified' },
+  OFFICIAL:             { label: 'Official Verified', mod: 'official' },
+  CONTRACTOR:           { label: 'Contractor submitted', mod: 'contractor' },
+  CITIZEN:              { label: 'Citizen observation', mod: 'citizen' },
+  UNVERIFIED:           { label: 'Unverified', mod: 'unverified' },
+  PENDING_VERIFICATION: { label: 'Pending Verification', mod: 'atrisk' },
+  REJECTED:             { label: 'Rejected by Government', mod: 'delayed' },
+  CITIZEN_OBSERVATION:  { label: 'Citizen Observation', mod: 'citizen' },
+  ACKNOWLEDGED:         { label: 'Acknowledged', mod: 'official' },
+  DISMISSED:            { label: 'Dismissed', mod: 'unverified' },
 };
 
 export const DEMO_DEPARTMENTS = [

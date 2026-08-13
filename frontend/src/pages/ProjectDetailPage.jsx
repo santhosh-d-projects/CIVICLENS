@@ -9,13 +9,41 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
   ArrowLeft, MapPin, Calendar, Building2, User, FileText,
   ExternalLink, ShieldCheck, Info, ChevronDown, ChevronUp,
-  CheckCircle2, Circle
+  CheckCircle2, Circle, Sparkles, Send, AlertTriangle
 } from 'lucide-react';
+import L from 'leaflet';
+import { MapContainer, TileLayer, Marker } from 'react-leaflet';
 import api from '../services/api';
 import {
   StatusPill, BudgetFigure, DateValue, ProgressBar,
   PromiseRealityBar, TrustLabel, Spinner, SectionLabel
 } from '../components/shared';
+
+// Create custom colored Leaflet markers using DivIcon
+const createCustomMarker = (status) => {
+  const colors = {
+    ON_TRACK: '#3D5B43',     // green
+    AT_RISK: '#D97324',      // amber/saffron
+    BEHIND: '#C22F4E',       // red
+    COMPLETED: '#1A63CB'     // blue
+  };
+
+  const fill = colors[status] || '#D97324';
+  
+  return L.divIcon({
+    html: `<div style="
+      background-color: ${fill};
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 2px solid white;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+    "></div>`,
+    className: 'custom-leaflet-marker',
+    iconSize: [14, 14],
+    iconAnchor: [7, 7]
+  });
+};
 
 const TABS = ['Overview', 'Funding', 'Progress', 'Sources'];
 
@@ -26,6 +54,7 @@ export const ProjectDetailPage = () => {
   const [contractorUpdates, setContractorUpdates] = useState([]);
   const [citizenObs, setCitizenObs] = useState([]);
   const [auditTrail, setAuditTrail] = useState([]);
+  const [assessment, setAssessment] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState('Overview');
@@ -40,6 +69,7 @@ export const ProjectDetailPage = () => {
           setContractorUpdates(res.data.contractorUpdates || []);
           setCitizenObs(res.data.citizenObservations || []);
           setAuditTrail(res.data.auditTrail || []);
+          setAssessment(res.data.assessment || null);
         } else {
           setError('Project not found.');
         }
@@ -109,6 +139,27 @@ export const ProjectDetailPage = () => {
                   {project.category}
                 </span>
                 <StatusPill status={project.status} />
+                {assessment && (
+                  <span
+                    className="status-pill font-bold tracking-wide text-[10px] uppercase border"
+                    style={{
+                      color: assessment.assessment.status === 'COMPLETED' ? 'var(--status-completed-text)'
+                           : assessment.assessment.status === 'ON_TRACK' ? 'var(--status-completed-text)'
+                           : assessment.assessment.status === 'AT_RISK' ? 'var(--status-atrisk-text)'
+                           : 'var(--status-delayed-text)',
+                      backgroundColor: assessment.assessment.status === 'COMPLETED' ? 'var(--status-completed-bg)'
+                                     : assessment.assessment.status === 'ON_TRACK' ? 'var(--status-completed-bg)'
+                                     : assessment.assessment.status === 'AT_RISK' ? 'var(--status-atrisk-bg)'
+                                     : 'var(--status-delayed-bg)',
+                      borderColor: assessment.assessment.status === 'COMPLETED' ? 'var(--status-completed-border)'
+                                 : assessment.assessment.status === 'ON_TRACK' ? 'var(--status-completed-border)'
+                                 : assessment.assessment.status === 'AT_RISK' ? 'var(--status-atrisk-border)'
+                                 : 'var(--status-delayed-border)'
+                    }}
+                  >
+                    Assessment: {assessment.assessment.status?.replace('_', ' ')}
+                  </span>
+                )}
                 {!project.isPublished && (
                   <span className="cl-badge text-xs" style={{ color: 'var(--ink-muted)' }}>
                     Draft
@@ -230,16 +281,43 @@ export const ProjectDetailPage = () => {
 
               {/* Signature element: Promise vs Reality bar */}
               {project.startDate && project.expectedCompletionDate && (
-                <div className="cl-card-raised p-4 rounded">
-                  <SectionLabel className="mb-3">Timeline vs today</SectionLabel>
+                <div className="cl-card-raised p-4 rounded space-y-4">
+                  <SectionLabel className="mb-1">Promise vs Reality Ledger</SectionLabel>
                   <PromiseRealityBar
                     startDate={project.startDate}
                     expectedDate={project.expectedCompletionDate}
                     status={project.status}
+                    officialProgress={project.officialProgress}
+                    expectedProgress={assessment?.assessment?.expectedProgress}
+                    progressGap={assessment?.assessment?.progressGap}
+                    showGapDetails={true}
                   />
                 </div>
               )}
+
+              {/* CivicLens Deterministic Risk Assessment Explanation */}
+              {assessment && (
+                <div className="cl-card p-4 space-y-3">
+                  <h3 className="text-sm font-bold uppercase tracking-wider flex items-center gap-1.5" style={{ color: 'var(--ink-text)' }}>
+                    <Info size={14} className="text-ink-accent" />
+                    CivicLens Assessment: {assessment.assessment.status?.replace('_', ' ')}
+                  </h3>
+                  <div className="text-xs space-y-2">
+                    <span className="text-ink-muted uppercase block text-[9px] font-bold tracking-wider">Why? (Assessment Reasons)</span>
+                    <ul className="list-disc list-inside space-y-1.5" style={{ color: 'var(--ink-muted)' }}>
+                      {assessment.assessment.reasons?.map((reason, idx) => (
+                        <li key={idx} className="text-xs text-ink-text leading-relaxed">
+                          {reason}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              )}
             </DetailSection>
+
+            {/* Source-Backed AI Section */}
+            <AskCivicLensSection projectId={project.id} projectName={project.name} />
 
             {/* 02 — Funding */}
             <DetailSection title="02 — The funding" show={activeTab === 'Funding'}>
@@ -297,17 +375,90 @@ export const ProjectDetailPage = () => {
 
             {/* 03 — Progress */}
             <DetailSection title="03 — Progress" show={activeTab === 'Progress'}>
+              
+              {/* Conflict warning banner */}
+              {(() => {
+                const conflict = citizenObs.find(obs =>
+                  ['PROGRESS_OBSERVATION', 'SITE_CONDITION', 'COMPLETION_OBSERVATION'].includes(obs.observationType) &&
+                  ['SUBMITTED', 'ACKNOWLEDGED'].includes(obs.status)
+                );
+                if (!conflict) return null;
+                return (
+                  <div
+                    className="p-4 rounded-lg border mb-5 space-y-3"
+                    style={{ borderColor: 'var(--status-atrisk-border)', background: 'var(--status-atrisk-bg)' }}
+                  >
+                    <div className="flex items-center gap-2 font-bold text-sm" style={{ color: 'var(--status-atrisk-text)' }}>
+                      <AlertTriangle size={15} />
+                      <span>Information requires verification</span>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                      <div className="p-3 rounded border" style={{ background: 'rgba(0,0,0,0.2)', borderColor: 'var(--ink-border)' }}>
+                        <span className="font-semibold uppercase tracking-wider block mb-1" style={{ color: 'var(--ink-subtle)' }}>Official Record</span>
+                        <span className="font-mono text-base font-bold" style={{ color: 'var(--status-completed-text)' }}>{project.officialProgress}%</span> Government Verified
+                      </div>
+                      <div className="p-3 rounded border" style={{ background: 'rgba(0,0,0,0.2)', borderColor: 'var(--ink-border)' }}>
+                        <span className="font-semibold uppercase tracking-wider block mb-1" style={{ color: 'var(--ink-subtle)' }}>Citizen Observation</span>
+                        <p className="font-medium" style={{ color: 'var(--ink-text)' }}>{conflict.description}</p>
+                      </div>
+                    </div>
+                    <p className="text-[10px]" style={{ color: 'var(--ink-subtle)' }}>
+                      CivicLens presents multiple information sources neutrally for public transparency. Ground observations do not automatically change official verification records.
+                    </p>
+                  </div>
+                );
+              })()}
+
+              {/* Contractor progress mismatch warning */}
+              {(() => {
+                const pendingContr = contractorUpdates.find(u => u.status === 'PENDING');
+                if (pendingContr && pendingContr.progressPercentage !== project.officialProgress) {
+                  return (
+                    <div
+                      className="p-4 rounded-lg border mb-5 space-y-2 text-xs"
+                      style={{ borderColor: 'var(--status-atrisk-border)', background: 'var(--status-atrisk-bg)' }}
+                    >
+                      <div className="flex items-center gap-2 font-bold text-sm" style={{ color: 'var(--status-atrisk-text)' }}>
+                        <Info size={15} />
+                        <span>Progress Mismatch Notice</span>
+                      </div>
+                      <p className="font-semibold text-ink-text leading-normal">
+                        Latest contractor progress differs from the current government-verified progress.
+                      </p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs mt-1">
+                        <div className="p-3 rounded border" style={{ background: 'rgba(0,0,0,0.2)', borderColor: 'var(--ink-border)' }}>
+                          <span className="font-semibold uppercase tracking-wider block mb-1" style={{ color: 'var(--ink-subtle)' }}>Official Record</span>
+                          <span className="font-mono text-base font-bold" style={{ color: 'var(--status-completed-text)' }}>{project.officialProgress}%</span> Government Verified
+                        </div>
+                        <div className="p-3 rounded border" style={{ background: 'rgba(0,0,0,0.2)', borderColor: 'var(--ink-border)' }}>
+                          <span className="font-semibold uppercase tracking-wider block mb-1" style={{ color: 'var(--ink-subtle)' }}>Contractor Submission</span>
+                          <span className="font-mono text-base font-bold text-ink-text">{pendingContr.progressPercentage}%</span> Proposed (Pending Verification)
+                        </div>
+                      </div>
+                    </div>
+                  );
+                }
+                return null;
+              })()}
+
               {project.officialProgress > 0 ? (
                 <>
                   <div className="mb-5">
-                    <ProgressBar
-                      pct={project.officialProgress}
-                      status={project.status}
-                      showLabel
-                    />
+                    <div className="flex items-center gap-3 mb-2">
+                      <ProgressBar
+                        pct={project.officialProgress}
+                        status={project.status}
+                        showLabel={false}
+                        className="flex-1"
+                      />
+                      <div className="flex-shrink-0 flex items-center gap-1.5 font-mono text-sm font-bold">
+                        {project.officialProgress}%
+                        <TrustLabel type="OFFICIAL" />
+                      </div>
+                    </div>
                   </div>
                   {project.milestones && project.milestones.length > 0 && (
-                    <div className="space-y-3">
+                    <div className="space-y-3 mb-6">
                       <SectionLabel className="mb-2">Milestones</SectionLabel>
                       {project.milestones.map((m, i) => (
                         <MilestoneRow key={i} milestone={m} />
@@ -317,50 +468,233 @@ export const ProjectDetailPage = () => {
                 </>
               ) : (
                 <div
-                  className="p-5 rounded text-sm text-center"
+                  className="p-5 rounded text-sm text-center mb-6"
                   style={{ background: 'var(--ink-surface-2)', color: 'var(--ink-muted)', border: '1px solid var(--ink-border)' }}
                 >
                   Progress information will appear here once the contractor begins submitting updates.
                 </div>
               )}
 
-              {contractorUpdates.length > 0 && (
-                <div className="mt-5 space-y-3">
-                  <SectionLabel className="mb-2">Contractor reports</SectionLabel>
-                  {contractorUpdates.map((u, i) => (
-                    <div key={i} className="cl-card-raised p-4 rounded">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-sm font-medium" style={{ color: 'var(--ink-text)' }}>
-                          {u.contractorName}
-                        </span>
-                        <TrustLabel type="CONTRACTOR" />
-                      </div>
-                      <p className="text-xs mb-2" style={{ color: 'var(--ink-muted)' }}>{u.description}</p>
-                      <span className="font-mono text-xs" style={{ color: 'var(--ink-subtle)' }}>
-                        {u.submittedAt ? new Date(u.submittedAt).toLocaleDateString() : ''}
-                        {' · '}Progress: {u.progressPercentage}%
+              {/* Latest Approved Update Block */}
+              {(() => {
+                const approved = contractorUpdates.filter(u => u.status === 'APPROVED');
+                if (approved.length === 0) return null;
+                const latest = [...approved].sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt))[0];
+                return (
+                  <div className="mb-6 p-4 rounded-lg border" style={{ borderColor: 'var(--status-completed-border)', background: 'var(--status-completed-bg)' }}>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--status-completed-text)' }}>
+                        Latest Approved Update
                       </span>
+                      <TrustLabel type="OFFICIAL" />
                     </div>
-                  ))}
+                    <div className="space-y-1.5 text-sm">
+                      <div>Verified Progress: <span className="font-mono font-bold text-ink-text">{latest.progressPercentage}%</span></div>
+                      <p className="text-ink-muted text-xs leading-relaxed">{latest.description}</p>
+                      {latest.governmentComment && (
+                        <div className="mt-2 text-xs p-2 rounded" style={{ background: 'var(--ink-surface-2)', border: '1px solid var(--ink-border)' }}>
+                          <span className="font-semibold text-ink-accent block mb-0.5">Government verification note:</span>
+                          {latest.governmentComment}
+                        </div>
+                      )}
+                      <div className="text-[10px] text-ink-subtle pt-1">
+                        Approved: {latest.reviewedAt ? new Date(latest.reviewedAt).toLocaleDateString() : ''} by {latest.reviewedBy}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* Chronological updates history log */}
+              {contractorUpdates.length > 0 && (
+                <div className="mb-6 space-y-3">
+                  <SectionLabel className="mb-2">Progress Update Timeline</SectionLabel>
+                  <div className="space-y-3">
+                    {[...contractorUpdates].sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt)).map((u, i) => {
+                      const isApproved = u.status === 'APPROVED';
+                      const isPending = u.status === 'PENDING';
+                      const isRejected = u.status === 'REJECTED';
+                      
+                      let trustType = 'UNVERIFIED';
+                      let borderColor = 'var(--ink-border)';
+                      let bgColor = 'var(--ink-surface-2)';
+                      
+                      if (isApproved) {
+                        trustType = 'OFFICIAL';
+                        borderColor = 'var(--status-completed-border)';
+                        bgColor = 'var(--status-completed-bg)';
+                      } else if (isPending) {
+                        trustType = 'PENDING_VERIFICATION';
+                        borderColor = 'var(--status-atrisk-border)';
+                        bgColor = 'var(--status-atrisk-bg)';
+                      } else if (isRejected) {
+                        trustType = 'REJECTED';
+                        borderColor = 'var(--status-delayed-border)';
+                        bgColor = 'var(--status-delayed-bg)';
+                      }
+
+                      return (
+                        <div
+                          key={u.id}
+                          className="p-4 rounded-lg border space-y-2.5"
+                          style={{ borderColor, background: bgColor }}
+                        >
+                          <div className="flex items-center justify-between gap-3 flex-wrap">
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono text-base font-bold text-ink-text">
+                                {u.progressPercentage}%
+                              </span>
+                              <span className="text-xs font-semibold" style={{ color: 'var(--ink-muted)' }}>
+                                {isApproved ? 'government verified' : isPending ? 'contractor submitted' : 'rejected submission'}
+                              </span>
+                            </div>
+                            <TrustLabel type={trustType} />
+                          </div>
+
+                          <p className="text-xs leading-normal" style={{ color: 'var(--ink-text)' }}>
+                            {u.description}
+                          </p>
+
+                          {u.delayReason && (
+                            <div className="p-2.5 rounded text-[11px]" style={{ background: 'var(--ink-surface)', border: '1px solid var(--ink-border)', color: 'var(--ink-muted)' }}>
+                              <span className="font-semibold text-ink-subtle block mb-0.5">Contractor-provided explanation:</span>
+                              {u.delayReason}
+                            </div>
+                          )}
+
+                          {isApproved && u.governmentComment && (
+                            <div className="p-2.5 rounded text-[11px]" style={{ background: 'var(--ink-surface)', border: '1px solid var(--ink-border)', color: 'var(--ink-text)' }}>
+                              <span className="font-semibold text-ink-accent block mb-0.5">Government verification note:</span>
+                              {u.governmentComment}
+                            </div>
+                          )}
+
+                          {isRejected && u.governmentComment && (
+                            <div className="p-2.5 rounded text-[11px]" style={{ background: 'var(--ink-surface)', border: '1px solid var(--ink-border)', color: 'var(--status-delayed-text)' }}>
+                              <span className="font-semibold text-status-delayed-text block mb-0.5">Rejection reason:</span>
+                              {u.governmentComment}
+                            </div>
+                          )}
+
+                          <div className="flex justify-between items-center text-[9px]" style={{ color: 'var(--ink-subtle)' }}>
+                            <span className="font-mono">Submitted: {u.submittedAt ? new Date(u.submittedAt).toLocaleDateString() : ''}</span>
+                            {isApproved && u.reviewedAt && (
+                              <span>Approved: {new Date(u.reviewedAt).toLocaleDateString()}</span>
+                            )}
+                            {isRejected && u.reviewedAt && (
+                              <span>Rejected: {new Date(u.reviewedAt).toLocaleDateString()}</span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
 
-              {citizenObs.length > 0 && (
-                <div className="mt-5 space-y-3">
-                  <SectionLabel className="mb-2">Citizen observations</SectionLabel>
-                  {citizenObs.map((obs, i) => (
-                    <div key={i} className="cl-card-raised p-4 rounded">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-sm font-medium" style={{ color: 'var(--ink-text)' }}>
-                          {obs.citizenName || 'Anonymous'}
-                        </span>
-                        <TrustLabel type={obs.verificationStatus === 'VERIFIED' ? 'CITIZEN' : 'UNVERIFIED'} />
-                      </div>
-                      <p className="text-xs" style={{ color: 'var(--ink-muted)' }}>{obs.observation || obs.content}</p>
-                    </div>
-                  ))}
+              {/* Citizen Observations list */}
+              <div className="mt-6 space-y-4">
+                <div className="flex items-center justify-between flex-wrap gap-3">
+                  <SectionLabel>Citizen Observations ({citizenObs.length})</SectionLabel>
+                  <button
+                    onClick={() => navigate(`/citizen/projects/${project.id}/observe`)}
+                    className="cl-btn cl-btn--primary cl-btn--sm"
+                  >
+                    Report what you observed
+                  </button>
                 </div>
-              )}
+
+                {citizenObs.length === 0 ? (
+                  <div
+                    className="p-5 rounded text-sm text-center"
+                    style={{ background: 'var(--ink-surface-2)', color: 'var(--ink-muted)', border: '1px solid var(--ink-border)' }}
+                  >
+                    No citizen observations submitted for this project. Be the first to submit ground proof.
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {[...citizenObs].sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt)).map((obs, i) => {
+                      const obsStatus = obs.status || obs.verificationStatus || 'SUBMITTED';
+                      
+                      let trustType = 'UNVERIFIED';
+                      let borderColor = 'var(--ink-border)';
+                      let bgColor = 'var(--ink-surface-2)';
+                      
+                      if (obsStatus === 'ACKNOWLEDGED') {
+                        trustType = 'ACKNOWLEDGED';
+                        borderColor = 'var(--status-completed-border)';
+                        bgColor = 'var(--status-completed-bg)';
+                      } else if (obsStatus === 'DISMISSED') {
+                        trustType = 'DISMISSED';
+                        borderColor = 'var(--ink-border)';
+                        bgColor = 'var(--ink-surface-2)';
+                      } else {
+                        trustType = 'PENDING_VERIFICATION';
+                        borderColor = 'var(--status-atrisk-border)';
+                        bgColor = 'var(--status-atrisk-bg)';
+                      }
+
+                      return (
+                        <div
+                          key={obs.id || i}
+                          className="p-4 rounded-lg border space-y-2.5"
+                          style={{ borderColor, background: bgColor }}
+                        >
+                          <div className="flex items-center justify-between gap-3">
+                            <div>
+                              <span className="text-xs font-bold uppercase tracking-wider text-ink-muted">
+                                {obs.observationType?.replace('_', ' ') || 'Citizen Observation'}
+                              </span>
+                            </div>
+                            <TrustLabel type={trustType} />
+                          </div>
+
+                          <p className="text-xs leading-normal" style={{ color: 'var(--ink-text)' }}>
+                            {obs.description || obs.observationText}
+                          </p>
+
+                          {obs.location && obs.location.description && (
+                            <div className="text-[11px]" style={{ color: 'var(--ink-subtle)' }}>
+                              Location: <span className="font-semibold text-ink-muted">{obs.location.description}</span>
+                            </div>
+                          )}
+
+                          {obs.evidence && obs.evidence.length > 0 && (
+                            <div className="flex flex-wrap gap-2">
+                              {obs.evidence.map((ev, idx) => (
+                                <a
+                                  key={idx}
+                                  href={ev.fileReference}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] border hover:border-ink-accent transition-colors"
+                                  style={{ background: 'var(--ink-surface)', borderColor: 'var(--ink-border)', color: 'var(--ink-muted)' }}
+                                >
+                                  <FileText size={10} /> {ev.fileName}
+                                </a>
+                              ))}
+                            </div>
+                          )}
+
+                          {obs.governmentComment && (
+                            <div className="p-2.5 rounded text-[11px]" style={{ background: 'var(--ink-surface)', border: '1px solid var(--ink-border)', color: 'var(--ink-text)' }}>
+                              <span className="font-semibold text-ink-accent block mb-0.5">Government Comment:</span>
+                              {obs.governmentComment}
+                            </div>
+                          )}
+
+                          <div className="flex justify-between items-center text-[9px]" style={{ color: 'var(--ink-subtle)' }}>
+                            <span className="font-mono">Submitted: {obs.createdAt ? new Date(obs.createdAt).toLocaleDateString() : ''}</span>
+                            {obs.reviewedBy && obs.reviewedAt && (
+                              <span>Reviewed by {obs.reviewedBy}</span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             </DetailSection>
 
           </div>
@@ -427,14 +761,41 @@ export const ProjectDetailPage = () => {
                   </div>
                 )}
                 {project.location?.lat && project.location?.lng && (
-                  <div>
-                    <span className="text-xs" style={{ color: 'var(--ink-muted)' }}>Coordinates</span>
+                  <div className="space-y-2">
+                    <span className="text-xs block" style={{ color: 'var(--ink-muted)' }}>Coordinates</span>
                     <p className="font-mono text-xs" style={{ color: 'var(--ink-muted)' }}>
-                      {project.location.lat.toFixed(4)}, {project.location.lng.toFixed(4)}
+                      {parseFloat(project.location.lat).toFixed(4)}, {parseFloat(project.location.lng).toFixed(4)}
                     </p>
-                    <p className="text-xs mt-1" style={{ color: 'var(--ink-subtle)' }}>
-                      Map view coming in next update.
-                    </p>
+                    
+                    {/* Small Map Widget */}
+                    <div
+                      className="rounded overflow-hidden border border-ink-border cursor-pointer relative mt-2"
+                      style={{ height: '140px', zIndex: 1 }}
+                      onClick={() => navigate('/citizen/dashboard')}
+                      title="Click to view on larger citizen map"
+                    >
+                      <MapContainer
+                        center={[parseFloat(project.location.lat), parseFloat(project.location.lng)]}
+                        zoom={14}
+                        style={{ height: '100%', width: '100%' }}
+                        zoomControl={false}
+                        dragging={false}
+                        doubleClickZoom={false}
+                        scrollWheelZoom={false}
+                      >
+                        <TileLayer
+                          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                        />
+                        <Marker
+                          position={[parseFloat(project.location.lat), parseFloat(project.location.lng)]}
+                          icon={createCustomMarker(assessment?.assessment?.status || 'ON_TRACK')}
+                        />
+                      </MapContainer>
+                    </div>
+                    <div className="text-[10px] text-center italic mt-1" style={{ color: 'var(--ink-subtle)' }}>
+                      Click map to open larger Civic Map.
+                    </div>
                   </div>
                 )}
               </div>
@@ -533,6 +894,189 @@ function MilestoneRow({ milestone: m }) {
           <ProgressBar pct={m.progress} showLabel={false} className="mt-1.5" />
         )}
       </div>
+    </div>
+  );
+}
+
+const SUGGESTED_QUESTIONS = [
+  "Why is this project behind schedule?",
+  "What is the sanctioned budget?",
+  "What is the latest reported progress?",
+  "Who is the contractor?"
+];
+
+function AskCivicLensSection({ projectId, projectName }) {
+  const [question, setQuestion] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [response, setResponse] = useState(null);
+  const [error, setError] = useState('');
+
+  const handleAsk = async (queryToAsk) => {
+    const q = (queryToAsk || question).trim();
+    if (!q || loading) return;
+
+    setQuestion(q);
+    setLoading(true);
+    setError('');
+
+    try {
+      const res = await api.post('/ai/ask', {
+        projectId,
+        question: q
+      });
+      if (res.data && res.data.success) {
+        setResponse(res.data);
+      } else {
+        setError(res.data?.error || "Unable to reach CivicLens AI right now.");
+      }
+    } catch {
+      setError("Unable to reach CivicLens AI right now.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div
+      className="cl-card p-5 space-y-4 my-6 border"
+      style={{ borderColor: 'var(--ink-border)', background: 'var(--ink-surface-2)' }}
+    >
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <div className="flex items-center gap-2">
+          <Sparkles size={16} style={{ color: 'var(--ink-accent)' }} />
+          <h3 className="text-sm font-bold uppercase tracking-wider" style={{ color: 'var(--ink-text)' }}>
+            ASK CIVICLENS
+          </h3>
+        </div>
+        <span className="cl-badge text-[10px] font-mono" style={{ color: 'var(--ink-accent)' }}>
+          Source-Backed AI
+        </span>
+      </div>
+
+      <p className="text-xs" style={{ color: 'var(--ink-muted)' }}>
+        Ask a question about {projectName || 'this project'}. Answers are synthesized directly from official government records and field audit documents with verified citations.
+      </p>
+
+      {/* Suggested Questions */}
+      <div className="flex flex-wrap gap-2">
+        {SUGGESTED_QUESTIONS.map((sq, idx) => (
+          <button
+            key={idx}
+            type="button"
+            disabled={loading}
+            onClick={() => handleAsk(sq)}
+            className="text-xs px-3 py-1.5 rounded border transition-colors text-left disabled:opacity-50"
+            style={{
+              background: 'var(--ink-surface)',
+              borderColor: 'var(--ink-border)',
+              color: 'var(--ink-text)'
+            }}
+          >
+            {sq}
+          </button>
+        ))}
+      </div>
+
+      {/* Input Form */}
+      <form onSubmit={(e) => { e.preventDefault(); handleAsk(); }} className="flex gap-2">
+        <input
+          type="text"
+          value={question}
+          onChange={(e) => setQuestion(e.target.value)}
+          placeholder="Ask a question about budget, timeline, or progress..."
+          disabled={loading}
+          className="flex-1 rounded px-3 py-2 text-xs focus:outline-none disabled:opacity-50"
+          style={{
+            background: 'var(--ink-surface)',
+            border: '1px solid var(--ink-border)',
+            color: 'var(--ink-text)'
+          }}
+        />
+        <button
+          type="submit"
+          disabled={loading || !question.trim()}
+          className="cl-btn cl-btn--primary text-xs px-4 py-2 flex items-center gap-1.5 disabled:opacity-50"
+        >
+          {loading ? (
+            <>
+              <Spinner size={12} />
+              <span>Analyzing...</span>
+            </>
+          ) : (
+            <>
+              <Send size={12} />
+              <span>Ask</span>
+            </>
+          )}
+        </button>
+      </form>
+
+      {/* Loading state */}
+      {loading && (
+        <div
+          className="p-3.5 rounded text-xs flex items-center gap-2 border"
+          style={{ background: 'var(--ink-surface)', borderColor: 'var(--ink-border)', color: 'var(--ink-accent)' }}
+        >
+          <Spinner size={14} />
+          <span>Analyzing CivicLens sources...</span>
+        </div>
+      )}
+
+      {/* Error state */}
+      {error && (
+        <div
+          className="p-3 rounded text-xs border"
+          style={{ background: 'var(--status-delayed-bg)', borderColor: 'var(--status-delayed-border)', color: 'var(--status-delayed-text)' }}
+        >
+          {error}
+        </div>
+      )}
+
+      {/* Answer Output Block */}
+      {response && (
+        <div
+          className="p-4 rounded-lg border space-y-3 text-xs"
+          style={{ background: 'var(--ink-surface)', borderColor: 'var(--ink-border)' }}
+        >
+          <div className="flex items-center justify-between border-b pb-2" style={{ borderColor: 'var(--ink-border)' }}>
+            <span className="font-semibold uppercase tracking-wider text-[10px]" style={{ color: 'var(--ink-accent)' }}>
+              Grounded Answer
+            </span>
+            <span
+              className="text-[10px] font-mono font-bold"
+              style={{ color: response.grounded ? 'var(--status-completed-text)' : 'var(--status-atrisk-text)' }}
+            >
+              {response.grounded ? 'Source Verified' : 'Notice'}
+            </span>
+          </div>
+
+          <div className="leading-relaxed whitespace-pre-line text-xs" style={{ color: 'var(--ink-text)' }}>
+            {response.answer}
+          </div>
+
+          {/* Page-level Citations */}
+          {response.sources && response.sources.length > 0 && (
+            <div className="pt-2 border-t space-y-1.5" style={{ borderColor: 'var(--ink-border)' }}>
+              <span className="uppercase tracking-wider text-[9px] font-bold block" style={{ color: 'var(--ink-muted)' }}>
+                Sources:
+              </span>
+              <div className="flex flex-wrap gap-2">
+                {response.sources.map((src, idx) => (
+                  <div
+                    key={idx}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded border text-[11px]"
+                    style={{ background: 'var(--ink-surface-2)', borderColor: 'var(--ink-border)', color: 'var(--ink-text)' }}
+                  >
+                    <FileText size={11} style={{ color: 'var(--ink-accent)' }} />
+                    <span>{src.documentName || src.document}</span>
+                    <span className="font-mono text-[10px]" style={{ color: 'var(--ink-subtle)' }}>Page {src.page}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

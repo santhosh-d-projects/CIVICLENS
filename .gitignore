@@ -88,6 +88,8 @@ embeddings_cache/
 *.sqlite
 *.sqlite3
 backend/data_store/*.json
+backend/uploads/*
+!backend/uploads/.gitkeep
 
 # --------------------------------------------------
 # Agent Instructions, Skills & Local Tooling / Media
