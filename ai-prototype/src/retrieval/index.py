@@ -36,6 +36,13 @@ class VectorIndex:
         if not self.chunks or self.matrix is None:
             return []
 
+        # Auto-align matrix dimension if embedding model space shifted (e.g. lightweight mode)
+        if query_vec.shape[0] != self.matrix.shape[1]:
+            from src.retrieval.embeddings import EmbeddingService
+            es = EmbeddingService()
+            self.chunks = es.embed_documents(self.chunks)
+            self.matrix = np.vstack([c["embedding"] for c in self.chunks]).astype(np.float32)
+
         # Filter candidate indices if project_id is provided
         candidate_indices = []
         project_id_aliases = {project_id} if project_id else set()

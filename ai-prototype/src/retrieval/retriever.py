@@ -15,7 +15,7 @@ class Retriever:
         query: str,
         top_k: int = TOP_K,
         project_id: Optional[str] = None,
-        relevance_threshold: float = RELEVANCE_THRESHOLD
+        relevance_threshold: Optional[float] = None
     ) -> List[Dict[str, Any]]:
         """
         Retrieve relevant chunks for a user query.
@@ -24,6 +24,13 @@ class Retriever:
         """
         if not query or not query.strip():
             return []
+
+        self.embedding_service._load_model()
+        if relevance_threshold is None:
+            if getattr(self.embedding_service, "model", None) in ("MOCK", "LIGHTWEIGHT"):
+                relevance_threshold = 0.12
+            else:
+                relevance_threshold = RELEVANCE_THRESHOLD
 
         query_vec = self.embedding_service.embed(query)
         raw_results = self.index.search(query_vec, top_k=top_k, project_id=project_id)
