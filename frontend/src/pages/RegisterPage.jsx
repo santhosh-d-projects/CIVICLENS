@@ -71,14 +71,15 @@ export const RegisterPage = () => {
         <div className="text-center mb-8">
           {/* Eyelet badge */}
           <div
-            className="inline-block px-3 py-1 rounded text-xs font-semibold uppercase tracking-wider mb-5"
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider mb-5"
             style={{
               background: 'var(--ink-surface-2)',
-              color: 'var(--ink-muted)',
+              color: 'var(--ink-text)',
               border: '1px solid var(--ink-border)',
             }}
           >
-            Civic transparency
+            <span>🇮🇳</span>
+            <span style={{ color: 'var(--tricolor-saffron-dark)' }}>INDEPENDENCE DAY 2026</span>
           </div>
 
           {/* Logo mark */}

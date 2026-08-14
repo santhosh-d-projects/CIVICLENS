@@ -36,17 +36,27 @@ export const ContractorDashboard = () => {
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
         {/* Header */}
-        <div className="mb-6">
-          <div className="flex items-center gap-2 mb-1">
-            <HardHat size={16} style={{ color: 'var(--ink-muted)' }} aria-hidden="true" />
-            <span className="cl-section-label">Contractor portal</span>
+        <div className="mb-6 flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <HardHat size={16} style={{ color: 'var(--ink-muted)' }} aria-hidden="true" />
+              <span className="cl-section-label">Contractor portal</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl font-bold">{user?.companyName || user?.name}</h1>
+              <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border"
+                style={{ background: 'var(--ink-surface-2)', borderColor: 'var(--ink-border)', color: 'var(--ink-text)' }}
+              >
+                <span>🇮🇳</span>
+                <span>15 AUG 2026</span>
+              </span>
+            </div>
+            {user?.registrationId && (
+              <p className="font-mono text-xs mt-1" style={{ color: 'var(--ink-muted)' }}>
+                Reg. ID: {user.registrationId}
+              </p>
+            )}
           </div>
-          <h1 className="text-xl font-bold">{user?.companyName || user?.name}</h1>
-          {user?.registrationId && (
-            <p className="font-mono text-xs mt-1" style={{ color: 'var(--ink-muted)' }}>
-              Reg. ID: {user.registrationId}
-            </p>
-          )}
         </div>
 
         {/* Assigned projects */}

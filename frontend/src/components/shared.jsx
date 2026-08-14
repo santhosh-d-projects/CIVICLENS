@@ -171,13 +171,13 @@ export function PromiseRealityBar({
   return (
     <div className={`${className}`} aria-label={isOverrun ? `${daysDelta} days past expected completion` : 'On track'}>
       <div className="flex justify-between items-center mb-1.5">
-        <span className="text-xs text-ink-muted">Timeline Progress</span>
+        <span className="text-xs font-semibold" style={{ color: 'var(--ink-muted)' }}>Timeline Progress</span>
         {isOverrun ? (
-          <span className="font-mono text-xs font-semibold" style={{ color: 'var(--status-delayed-text)' }}>
+          <span className="font-mono text-xs font-bold" style={{ color: 'var(--status-delayed-text)' }}>
             Overrun: +{daysDelta} days
           </span>
         ) : (
-          <span className="font-mono text-xs text-ink-muted">
+          <span className="font-mono text-xs font-semibold" style={{ color: 'var(--ink-muted)' }}>
             Target: {expectedDate}
           </span>
         )}
@@ -205,9 +205,9 @@ export function PromiseRealityBar({
       </div>
 
       <div className="flex justify-between mt-1 mb-2">
-        <span className="font-mono text-[10px] text-ink-subtle">Start: {startDate}</span>
-        <span className={`font-mono text-[10px] ${isOverrun ? '' : 'text-ink-subtle'}`}
-          style={isOverrun ? { color: 'var(--status-delayed-text)' } : {}}>
+        <span className="font-mono text-[11px] font-medium" style={{ color: 'var(--ink-subtle)' }}>Start: {startDate}</span>
+        <span className="font-mono text-[11px] font-medium"
+          style={{ color: isOverrun ? 'var(--status-delayed-text)' : 'var(--ink-subtle)' }}>
           Due: {expectedDate}
         </span>
       </div>
@@ -215,27 +215,36 @@ export function PromiseRealityBar({
       {/* Structured Promise vs Reality vs Gap Details */}
       {showGapDetails && (
         <div
-          className="mt-3 p-3 rounded-lg border space-y-3"
+          className="mt-3 p-3.5 rounded-lg border space-y-3"
           style={{ background: 'var(--ink-surface-2)', borderColor: 'var(--ink-border)' }}
         >
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-left">
             <div>
-              <span className="text-ink-muted uppercase block text-[9px] font-bold tracking-wider mb-0.5">Promise</span>
-              <p className="text-xs font-semibold leading-snug text-ink-text">
+              <span className="uppercase inline-flex items-center gap-1.5 text-[10px] font-bold tracking-wider mb-1" style={{ color: 'var(--tricolor-saffron-dark)' }}>
+                <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--tricolor-saffron-dark)' }} />
+                Promise
+              </span>
+              <p className="text-xs font-medium leading-snug" style={{ color: 'var(--ink-text)' }}>
                 Expected Completion:<br />
-                <span className="font-mono font-bold text-ink-text">{expectedDate}</span>
+                <span className="font-mono font-bold" style={{ color: 'var(--ink-text)' }}>{expectedDate}</span>
               </p>
             </div>
             <div>
-              <span className="text-ink-muted uppercase block text-[9px] font-bold tracking-wider mb-0.5">Reality</span>
-              <p className="text-xs font-semibold leading-snug text-ink-text">
+              <span className="uppercase inline-flex items-center gap-1.5 text-[10px] font-bold tracking-wider mb-1" style={{ color: 'var(--tricolor-green-dark)' }}>
+                <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--tricolor-green-dark)' }} />
+                Reality
+              </span>
+              <p className="text-xs font-medium leading-snug" style={{ color: 'var(--ink-text)' }}>
                 Official Progress:<br />
-                <span className="font-mono font-bold" style={{ color: 'var(--status-completed-text)' }}>{officialProgress}%</span> Government Verified
+                <span className="font-mono font-bold" style={{ color: 'var(--status-completed-text)' }}>{officialProgress}%</span> <span style={{ color: 'var(--ink-muted)' }}>Government Verified</span>
               </p>
             </div>
             <div>
-              <span className="text-ink-muted uppercase block text-[9px] font-bold tracking-wider mb-0.5">Gap</span>
-              <p className="text-xs font-semibold leading-snug text-ink-text">
+              <span className="uppercase inline-flex items-center gap-1.5 text-[10px] font-bold tracking-wider mb-1" style={{ color: 'var(--ink-muted)' }}>
+                <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--ink-muted)' }} />
+                Gap
+              </span>
+              <p className="text-xs font-medium leading-snug" style={{ color: 'var(--ink-text)' }}>
                 Status Variance:<br />
                 {calcGap > 0 ? (
                   <span className="font-mono font-bold" style={{ color: 'var(--status-delayed-text)' }}>
@@ -250,7 +259,7 @@ export function PromiseRealityBar({
             </div>
           </div>
           {calcGap > 0 && (
-            <p className="text-[10px] text-ink-subtle italic border-t pt-2" style={{ borderColor: 'var(--ink-border)' }}>
+            <p className="text-[11px] font-normal italic border-t pt-2" style={{ borderColor: 'var(--ink-border)', color: 'var(--ink-subtle)' }}>
               * Gap represents the variance between the expected progress ({calcExpected}%) and the official progress ({officialProgress}%).
             </p>
           )}

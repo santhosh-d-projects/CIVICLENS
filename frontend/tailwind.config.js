@@ -21,17 +21,17 @@ export default {
           border:    '#E8DFD0',   // --ink-border    : dividers, input outlines
           'border-2':'#D1C4AF',   // --ink-border-2  : stronger dividers
           text:      '#1C1814',   // --ink-text      : primary body (dark ink)
-          muted:     '#6E6254',   // --ink-muted     : secondary / metadata
-          subtle:    '#9C8C7B',   // --ink-subtle    : timestamps, tertiary
+          muted:     '#54483B',   // --ink-muted     : secondary / metadata
+          subtle:    '#6B5D4D',   // --ink-subtle    : timestamps, tertiary
           accent:    '#D97324',   // --ink-accent    : saffron primary accent
         },
         status: {
-          completed: '#226E35',   // --status-completed-text (dark green)
-          ongoing:   '#1B5EBA',   // --status-ongoing-text (dark blue)
-          atrisk:    '#8F6500',   // --status-atrisk-text (dark amber)
-          delayed:   '#C22F4E',   // --status-delayed-text (dark red)
-          planned:   '#595959',   // --status-planned-text
-          onhold:    '#7A4B00',   // --status-onhold-text
+          completed: '#1E652E',   // --status-completed-text (dark green)
+          ongoing:   '#154E9E',   // --status-ongoing-text (dark blue)
+          atrisk:    '#7A4F00',   // --status-atrisk-text (dark amber)
+          delayed:   '#A81C38',   // --status-delayed-text (dark red)
+          planned:   '#4D4D4D',   // --status-planned-text
+          onhold:    '#6B3F00',   // --status-onhold-text
         },
       },
       fontSize: {

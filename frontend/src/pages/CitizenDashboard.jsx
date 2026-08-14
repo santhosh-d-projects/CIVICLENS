@@ -106,16 +106,26 @@ export const CitizenDashboard = () => {
     <div className="min-h-screen" style={{ background: 'var(--ink-base)', color: 'var(--ink-text)' }}>
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
 
-        <div className="mb-2">
-          <h1 className="text-xl font-bold">
-            Welcome, {user?.name?.split(' ')[0] || 'Citizen'}
-          </h1>
-          {user?.ward && (
-            <div className="flex items-center gap-1.5 mt-1 text-sm" style={{ color: 'var(--ink-muted)' }}>
-              <MapPin size={13} aria-hidden="true" />
-              {user.ward}
+        <div className="mb-2 flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl font-bold">
+                Welcome, {user?.name?.split(' ')[0] || 'Citizen'}
+              </h1>
+              <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border"
+                style={{ background: 'var(--ink-surface-2)', borderColor: 'var(--ink-border)', color: 'var(--ink-text)' }}
+              >
+                <span>🇮🇳</span>
+                <span>15 AUG 2026</span>
+              </span>
             </div>
-          )}
+            {user?.ward && (
+              <div className="flex items-center gap-1.5 mt-1 text-sm" style={{ color: 'var(--ink-muted)' }}>
+                <MapPin size={13} aria-hidden="true" />
+                {user.ward}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Project Map Section */}

@@ -7,9 +7,9 @@ export const ProtectedRoute = ({ children, allowedRoles }) => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-teal-400">
-        <div className="w-12 h-12 border-4 border-teal-500/20 border-t-teal-400 rounded-full animate-spin mb-4"></div>
-        <p className="text-sm font-medium tracking-wide text-slate-400">Verifying CivicLens authentication...</p>
+      <div className="min-h-screen flex flex-col items-center justify-center" style={{ background: 'var(--ink-base)', color: 'var(--ink-text)' }}>
+        <div className="w-10 h-10 border-4 border-ink-border border-t-ink-accent rounded-full animate-spin mb-4" style={{ borderColor: 'var(--ink-border)', borderTopColor: 'var(--ink-accent)' }}></div>
+        <p className="text-sm font-medium tracking-wide" style={{ color: 'var(--ink-muted)' }}>Verifying CivicLens authentication...</p>
       </div>
     );
   }

@@ -45,6 +45,9 @@ export const Navbar = () => {
       className="sticky top-0 z-50 border-b"
       style={{ background: 'var(--ink-surface)', borderColor: 'var(--ink-border)' }}
     >
+      {/* ── Tricolor Top Accent Strip ── */}
+      <div className="tricolor-strip" aria-hidden="true" />
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-14">
 
@@ -68,10 +71,24 @@ export const Navbar = () => {
               CivicLens
             </span>
             <span
-              className="hidden sm:block font-mono text-[10px] font-medium px-1.5 py-0.5 rounded border"
+              className="hidden sm:inline-flex items-center gap-1 font-mono text-[10px] font-medium px-1.5 py-0.5 rounded border"
               style={{ color: 'var(--ink-muted)', borderColor: 'var(--ink-border)', background: 'var(--ink-surface-2)' }}
             >
-              PROMISE → PROOF
+              <span style={{ color: 'var(--tricolor-saffron-dark)' }}>PROMISE</span>
+              <span style={{ color: 'var(--ink-subtle)' }}>→</span>
+              <span style={{ color: 'var(--tricolor-green-dark)' }}>PROOF</span>
+            </span>
+            <span
+              className="hidden lg:inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border shadow-sm"
+              style={{
+                background: '#FCF9F5',
+                borderColor: 'var(--ink-border)',
+                color: 'var(--ink-text)'
+              }}
+              title="Independence Day Edition • 15 August 2026"
+            >
+              <span aria-hidden="true">🇮🇳</span>
+              <span className="tracking-wider">15 AUG</span>
             </span>
           </Link>
 

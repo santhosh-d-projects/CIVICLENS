@@ -201,6 +201,12 @@ export const GovernmentDashboard = () => {
               <span className="text-xs" style={{ color: 'var(--ink-muted)' }}>
                 {user?.department || user?.name}
               </span>
+              <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border"
+                style={{ background: 'var(--ink-surface-2)', borderColor: 'var(--ink-border)', color: 'var(--ink-text)' }}
+              >
+                <span>🇮🇳</span>
+                <span>15 AUG 2026</span>
+              </span>
             </div>
             <h1 className="text-xl font-bold">Civic project management</h1>
           </div>

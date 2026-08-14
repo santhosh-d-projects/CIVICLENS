@@ -298,15 +298,15 @@ export const ProjectDetailPage = () => {
               {/* CivicLens Deterministic Risk Assessment Explanation */}
               {assessment && (
                 <div className="cl-card p-4 space-y-3">
-                  <h3 className="text-sm font-bold uppercase tracking-wider flex items-center gap-1.5" style={{ color: 'var(--ink-text)' }}>
-                    <Info size={14} className="text-ink-accent" />
-                    CivicLens Assessment: {assessment.assessment.status?.replace('_', ' ')}
+                  <h3 className="text-sm font-bold uppercase tracking-wider flex items-center gap-2" style={{ color: 'var(--ink-text)' }}>
+                    <Info size={15} className="text-ink-accent flex-shrink-0" />
+                    <span>CivicLens Assessment: {assessment.assessment.status?.replace('_', ' ')}</span>
                   </h3>
                   <div className="text-xs space-y-2">
-                    <span className="text-ink-muted uppercase block text-[9px] font-bold tracking-wider">Why? (Assessment Reasons)</span>
-                    <ul className="list-disc list-inside space-y-1.5" style={{ color: 'var(--ink-muted)' }}>
+                    <span className="uppercase block text-[10px] font-bold tracking-wider" style={{ color: 'var(--ink-muted)' }}>Why? (Assessment Reasons)</span>
+                    <ul className="list-disc list-inside space-y-1.5" style={{ color: 'var(--ink-text)' }}>
                       {assessment.assessment.reasons?.map((reason, idx) => (
-                        <li key={idx} className="text-xs text-ink-text leading-relaxed">
+                        <li key={idx} className="text-xs font-medium leading-relaxed" style={{ color: 'var(--ink-text)' }}>
                           {reason}
                         </li>
                       ))}
