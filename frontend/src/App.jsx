@@ -22,7 +22,7 @@ export function App() {
   return (
     <AuthProvider>
       <Router>
-        <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
+        <div className="min-h-screen flex flex-col font-sans" style={{ background: 'var(--ink-base)', color: 'var(--ink-text)' }}>
           <Navbar />
           <main className="flex-1">
             <Routes>

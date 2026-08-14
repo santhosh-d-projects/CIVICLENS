@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Eye, Lock, Mail, User, Phone, MapPin, Building, ArrowRight } from 'lucide-react';
+import { Eye, ArrowRight } from 'lucide-react';
 
 export const RegisterPage = () => {
   const [role, setRole] = useState('CITIZEN');
@@ -39,7 +39,7 @@ export const RegisterPage = () => {
       city,
       ward,
       companyName,
-      registrationId
+      registrationId,
     };
 
     const result = await register(formData);
@@ -54,131 +54,188 @@ export const RegisterPage = () => {
     }
   };
 
-  return (
-    <div className="min-h-screen bg-slate-950 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-lg text-center">
-        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-teal-400 to-emerald-600 mx-auto flex items-center justify-center text-slate-950 font-bold shadow-lg shadow-teal-500/20 mb-4">
-          <Eye className="w-7 h-7 stroke-[2.5]" />
-        </div>
-        <h2 className="text-2xl font-bold tracking-tight text-white">Create a CivicLens Account</h2>
-        <p className="mt-1 text-xs text-slate-400">Join the civic transparency network</p>
-      </div>
+  const ROLES = [
+    { value: 'CITIZEN', label: 'Citizen' },
+    { value: 'CONTRACTOR', label: 'Contractor' },
+    { value: 'GOVERNMENT_ADMIN', label: 'Govt Admin' },
+  ];
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-lg">
-        <div className="glass-card p-8 rounded-2xl border border-slate-800 shadow-2xl">
-          
+  return (
+    <div
+      className="min-h-screen flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8"
+      style={{ background: 'var(--ink-base)' }}
+    >
+      <div className="sm:mx-auto sm:w-full sm:max-w-lg">
+
+        {/* Header */}
+        <div className="text-center mb-8">
+          {/* Eyelet badge */}
+          <div
+            className="inline-block px-3 py-1 rounded text-xs font-semibold uppercase tracking-wider mb-5"
+            style={{
+              background: 'var(--ink-surface-2)',
+              color: 'var(--ink-muted)',
+              border: '1px solid var(--ink-border)',
+            }}
+          >
+            Civic transparency
+          </div>
+
+          {/* Logo mark */}
+          <div
+            className="w-10 h-10 rounded-lg flex items-center justify-center mx-auto mb-4"
+            style={{ background: 'var(--ink-accent)', color: '#fff' }}
+            aria-hidden="true"
+          >
+            <Eye size={20} strokeWidth={2.5} />
+          </div>
+
+          <h1 className="text-2xl font-bold tracking-tight" style={{ color: 'var(--ink-text)' }}>
+            Create a CivicLens account
+          </h1>
+          <p className="mt-1.5 text-sm" style={{ color: 'var(--ink-muted)' }}>
+            Join the civic transparency network.
+          </p>
+        </div>
+
+        {/* Card */}
+        <div
+          className="cl-card px-8 py-8"
+          style={{ boxShadow: '0 1px 4px rgba(28,24,20,0.06)' }}
+        >
+          {/* Error */}
           {errorMsg && (
-            <div className="mb-5 p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-xs font-medium">
+            <div
+              className="mb-5 p-3 rounded text-xs font-medium"
+              style={{
+                background: 'var(--status-delayed-bg)',
+                border: '1px solid var(--status-delayed-border)',
+                color: 'var(--status-delayed-text)',
+              }}
+              role="alert"
+            >
               {errorMsg}
             </div>
           )}
 
-          {/* Role Selector Tabs */}
+          {/* Role selector */}
           <div className="mb-6">
-            <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Select Your Role:</label>
-            <div className="grid grid-cols-3 gap-2 p-1 bg-slate-900 rounded-xl border border-slate-800">
-              <button
-                type="button"
-                onClick={() => setRole('CITIZEN')}
-                className={`py-2 text-xs font-bold rounded-lg transition-all ${role === 'CITIZEN' ? 'bg-teal-500 text-slate-950 shadow-md' : 'text-slate-400 hover:text-white'}`}
-              >
-                Citizen
-              </button>
-              <button
-                type="button"
-                onClick={() => setRole('CONTRACTOR')}
-                className={`py-2 text-xs font-bold rounded-lg transition-all ${role === 'CONTRACTOR' ? 'bg-amber-500 text-slate-950 shadow-md' : 'text-slate-400 hover:text-white'}`}
-              >
-                Contractor
-              </button>
-              <button
-                type="button"
-                onClick={() => setRole('GOVERNMENT_ADMIN')}
-                className={`py-2 text-xs font-bold rounded-lg transition-all ${role === 'GOVERNMENT_ADMIN' ? 'bg-emerald-500 text-slate-950 shadow-md' : 'text-slate-400 hover:text-white'}`}
-              >
-                Govt Admin
-              </button>
+            <span className="cl-label">Select your role</span>
+            <div
+              className="grid grid-cols-3 gap-1.5 p-1 rounded-lg"
+              style={{ background: 'var(--ink-surface-2)', border: '1px solid var(--ink-border)' }}
+              role="group"
+              aria-label="Account role"
+            >
+              {ROLES.map(({ value, label }) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setRole(value)}
+                  className="py-2 text-xs font-semibold rounded transition-all"
+                  style={
+                    role === value
+                      ? { background: 'var(--ink-accent)', color: '#fff' }
+                      : { color: 'var(--ink-muted)' }
+                  }
+                  aria-pressed={role === value}
+                >
+                  {label}
+                </button>
+              ))}
             </div>
           </div>
 
-          <form onSubmit={handleRegister} className="space-y-4">
+          <form onSubmit={handleRegister} className="space-y-4" noValidate>
+
+            {/* Full name */}
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">Full Name / Representative</label>
-              <div className="relative">
-                <User className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
-                <input
-                  type="text"
-                  required
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g. Ananya Sharma"
-                  className="w-full pl-9 pr-4 py-2 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-teal-500"
-                />
-              </div>
+              <label htmlFor="reg-name" className="cl-label">
+                Full name / representative
+              </label>
+              <input
+                id="reg-name"
+                type="text"
+                required
+                autoComplete="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="e.g. Ananya Sharma"
+                className="cl-input"
+              />
             </div>
 
+            {/* Email */}
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">Email Address</label>
-              <div className="relative">
-                <Mail className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="user@example.com"
-                  className="w-full pl-9 pr-4 py-2 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-teal-500"
-                />
-              </div>
+              <label htmlFor="reg-email" className="cl-label">
+                Email address
+              </label>
+              <input
+                id="reg-email"
+                type="email"
+                required
+                autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="user@example.com"
+                className="cl-input"
+              />
             </div>
 
+            {/* Phone */}
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">Phone Number</label>
-              <div className="relative">
-                <Phone className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
-                <input
-                  type="text"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+91 9876543210"
-                  className="w-full pl-9 pr-4 py-2 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-teal-500"
-                />
-              </div>
+              <label htmlFor="reg-phone" className="cl-label">
+                Phone number
+              </label>
+              <input
+                id="reg-phone"
+                type="tel"
+                autoComplete="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="+91 9876543210"
+                className="cl-input"
+              />
             </div>
 
+            {/* Password */}
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">Password</label>
-              <div className="relative">
-                <Lock className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
-                <input
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full pl-9 pr-4 py-2 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-teal-500"
-                />
-              </div>
+              <label htmlFor="reg-password" className="cl-label">
+                Password
+              </label>
+              <input
+                id="reg-password"
+                type="password"
+                required
+                autoComplete="new-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="At least 6 characters"
+                className="cl-input"
+              />
             </div>
 
-            {/* Citizen Specific Fields */}
+            {/* Citizen-specific fields */}
             {role === 'CITIZEN' && (
-              <div className="grid grid-cols-2 gap-3 pt-2">
+              <div className="grid grid-cols-2 gap-3 pt-1">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">City</label>
+                  <label htmlFor="reg-city" className="cl-label">City</label>
                   <input
+                    id="reg-city"
                     type="text"
                     value={city}
                     onChange={(e) => setCity(e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-teal-500"
+                    className="cl-input"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">Ward</label>
+                  <label htmlFor="reg-ward" className="cl-label">Ward</label>
                   <select
+                    id="reg-ward"
                     value={ward}
                     onChange={(e) => setWard(e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-teal-500"
+                    className="cl-input"
+                    style={{ cursor: 'pointer' }}
                   >
                     <option value="Indiranagar (Ward 112)">Indiranagar (Ward 112)</option>
                     <option value="Koramangala (Ward 151)">Koramangala (Ward 151)</option>
@@ -190,57 +247,71 @@ export const RegisterPage = () => {
               </div>
             )}
 
-            {/* Contractor Specific Fields */}
+            {/* Contractor-specific fields */}
             {role === 'CONTRACTOR' && (
-              <div className="grid grid-cols-2 gap-3 pt-2">
+              <div className="grid grid-cols-2 gap-3 pt-1">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">Company Name</label>
+                  <label htmlFor="reg-company" className="cl-label">Company name</label>
                   <input
+                    id="reg-company"
                     type="text"
                     required
                     value={companyName}
                     onChange={(e) => setCompanyName(e.target.value)}
                     placeholder="e.g. Apex Civil Infra Ltd"
-                    className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-amber-500"
+                    className="cl-input"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">Registration ID</label>
+                  <label htmlFor="reg-regid" className="cl-label">Registration ID</label>
                   <input
+                    id="reg-regid"
                     type="text"
                     required
                     value={registrationId}
                     onChange={(e) => setRegistrationId(e.target.value)}
                     placeholder="e.g. KA-BBMP-2024-90"
-                    className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-amber-500"
+                    className="cl-input"
                   />
                 </div>
               </div>
             )}
 
+            {/* Submit */}
             <button
               type="submit"
               disabled={loading}
-              className="w-full mt-4 py-3 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-400 hover:to-emerald-500 text-slate-950 font-bold text-sm shadow-lg shadow-teal-500/20 flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+              className="cl-btn cl-btn--primary w-full mt-2"
+              aria-busy={loading}
             >
               {loading ? (
-                <div className="w-4 h-4 border-2 border-slate-950/20 border-t-slate-950 rounded-full animate-spin"></div>
+                <span
+                  className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"
+                  aria-hidden="true"
+                />
               ) : (
                 <>
-                  Register Account
-                  <ArrowRight className="w-4 h-4" />
+                  Register account
+                  <ArrowRight size={15} aria-hidden="true" />
                 </>
               )}
             </button>
           </form>
 
-          <div className="mt-6 text-center text-xs text-slate-400">
+          {/* Login link */}
+          <p
+            className="mt-6 text-center text-sm"
+            style={{ color: 'var(--ink-muted)' }}
+          >
             Already registered?{' '}
-            <Link to="/login" className="text-teal-400 font-semibold hover:underline">
+            <Link
+              to="/login"
+              className="font-semibold no-underline hover:underline"
+              style={{ color: 'var(--ink-accent)' }}
+            >
               Log in here
             </Link>
-          </div>
-
+          </p>
         </div>
       </div>
     </div>

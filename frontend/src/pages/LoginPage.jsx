@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Eye, Lock, Mail, ArrowRight, ShieldCheck, UserCheck } from 'lucide-react';
+import { Eye, ArrowRight } from 'lucide-react';
 
 export const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -44,107 +44,178 @@ export const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
-        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-teal-400 to-emerald-600 mx-auto flex items-center justify-center text-slate-950 font-bold shadow-lg shadow-teal-500/20 mb-4">
-          <Eye className="w-7 h-7 stroke-[2.5]" />
-        </div>
-        <h2 className="text-2xl font-bold tracking-tight text-white">Log in to CivicLens</h2>
-        <p className="mt-1 text-xs text-slate-400">Access your role-based civic transparency portal</p>
-      </div>
+    <div
+      className="min-h-screen flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8"
+      style={{ background: 'var(--ink-base)' }}
+    >
+      <div className="sm:mx-auto sm:w-full sm:max-w-md">
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="glass-card p-8 rounded-2xl border border-slate-800 shadow-2xl">
-          
+        {/* Header section */}
+        <div className="text-center mb-8">
+          {/* Eyelet badge */}
+          <div
+            className="inline-block px-3 py-1 rounded text-xs font-semibold uppercase tracking-wider mb-5"
+            style={{
+              background: 'var(--ink-surface-2)',
+              color: 'var(--ink-muted)',
+              border: '1px solid var(--ink-border)',
+            }}
+          >
+            Civic transparency
+          </div>
+
+          {/* Logo mark */}
+          <div
+            className="w-10 h-10 rounded-lg flex items-center justify-center mx-auto mb-4"
+            style={{ background: 'var(--ink-accent)', color: '#fff' }}
+            aria-hidden="true"
+          >
+            <Eye size={20} strokeWidth={2.5} />
+          </div>
+
+          <h1 className="text-2xl font-bold tracking-tight" style={{ color: 'var(--ink-text)' }}>
+            Log in to CivicLens
+          </h1>
+          <p className="mt-1.5 text-sm" style={{ color: 'var(--ink-muted)' }}>
+            Access your role-based civic transparency portal.
+          </p>
+        </div>
+
+        {/* Card */}
+        <div
+          className="cl-card px-8 py-8"
+          style={{ boxShadow: '0 1px 4px rgba(28,24,20,0.06)' }}
+        >
+          {/* Error message */}
           {errorMsg && (
-            <div className="mb-5 p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-xs font-medium">
+            <div
+              className="mb-5 p-3 rounded text-xs font-medium"
+              style={{
+                background: 'var(--status-delayed-bg)',
+                border: '1px solid var(--status-delayed-border)',
+                color: 'var(--status-delayed-text)',
+              }}
+              role="alert"
+            >
               {errorMsg}
             </div>
           )}
 
-          <form onSubmit={handleLogin} className="space-y-5">
+          <form onSubmit={handleLogin} className="space-y-5" noValidate>
+            {/* Email */}
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">Email Address</label>
-              <div className="relative">
-                <Mail className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="name@example.com"
-                  className="w-full pl-9 pr-4 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
-                />
-              </div>
+              <label htmlFor="login-email" className="cl-label">
+                Email address
+              </label>
+              <input
+                id="login-email"
+                type="email"
+                required
+                autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="name@example.com"
+                className="cl-input"
+              />
             </div>
 
+            {/* Password */}
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">Password</label>
-              <div className="relative">
-                <Lock className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
-                <input
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full pl-9 pr-4 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
-                />
-              </div>
+              <label htmlFor="login-password" className="cl-label">
+                Password
+              </label>
+              <input
+                id="login-password"
+                type="password"
+                required
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                className="cl-input"
+              />
             </div>
 
+            {/* Submit */}
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-400 hover:to-emerald-500 text-slate-950 font-bold text-sm shadow-lg shadow-teal-500/20 flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+              className="cl-btn cl-btn--primary w-full"
+              aria-busy={loading}
             >
               {loading ? (
-                <div className="w-4 h-4 border-2 border-slate-950/20 border-t-slate-950 rounded-full animate-spin"></div>
+                <span
+                  className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"
+                  aria-hidden="true"
+                />
               ) : (
                 <>
-                  Log In
-                  <ArrowRight className="w-4 h-4" />
+                  Log in
+                  <ArrowRight size={15} aria-hidden="true" />
                 </>
               )}
             </button>
           </form>
 
-          {/* Quick Demo Login Preset Buttons */}
-          <div className="mt-8 pt-6 border-t border-slate-800">
-            <p className="text-xs font-bold text-slate-400 text-center mb-3">Quick Demo Account Logins:</p>
+          {/* Quick Demo logins */}
+          <div
+            className="mt-8 pt-6"
+            style={{ borderTop: '1px solid var(--ink-border)' }}
+          >
+            <p className="cl-section-label text-center mb-3">
+              Quick demo account logins
+            </p>
             <div className="grid grid-cols-3 gap-2">
               <button
                 type="button"
+                id="demo-citizen-login"
                 onClick={() => handleQuickDemo('CITIZEN')}
-                className="py-2 text-[11px] font-bold rounded-lg bg-teal-500/10 hover:bg-teal-500/20 text-teal-300 border border-teal-500/30 transition-all text-center"
+                disabled={loading}
+                className="cl-btn cl-btn--secondary cl-btn--sm"
               >
                 Citizen
               </button>
               <button
                 type="button"
+                id="demo-contractor-login"
                 onClick={() => handleQuickDemo('CONTRACTOR')}
-                className="py-2 text-[11px] font-bold rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 transition-all text-center"
+                disabled={loading}
+                className="cl-btn cl-btn--secondary cl-btn--sm"
               >
                 Contractor
               </button>
               <button
                 type="button"
+                id="demo-gov-login"
                 onClick={() => handleQuickDemo('GOVERNMENT_ADMIN')}
-                className="py-2 text-[11px] font-bold rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 transition-all text-center"
+                disabled={loading}
+                className="cl-btn cl-btn--secondary cl-btn--sm"
               >
                 Govt Admin
               </button>
             </div>
-            <p className="text-[10px] text-slate-500 text-center mt-2">Demo credentials: password is Demo@123</p>
+            <p
+              className="text-xs text-center mt-2.5"
+              style={{ color: 'var(--ink-subtle)' }}
+            >
+              Demo credentials: password is <strong>Demo@123</strong>
+            </p>
           </div>
 
-          <div className="mt-6 text-center text-xs text-slate-400">
+          {/* Register link */}
+          <p
+            className="mt-6 text-center text-sm"
+            style={{ color: 'var(--ink-muted)' }}
+          >
             Don't have an account?{' '}
-            <Link to="/register" className="text-teal-400 font-semibold hover:underline">
+            <Link
+              to="/register"
+              className="font-semibold no-underline hover:underline"
+              style={{ color: 'var(--ink-accent)' }}
+            >
               Register here
             </Link>
-          </div>
-
+          </p>
         </div>
       </div>
     </div>
