@@ -498,14 +498,21 @@
 
 /* ── Utility extensions ─────────────────────────────────────── */
 @layer utilities {
-  .text-ink-base      { color: var(--ink-text); }
+  /* Explicit CSS-variable-backed text utilities.
+     These override any Tailwind-generated colors and always
+     track the correct ink token values for the cream theme. */
+  .text-ink-text      { color: var(--ink-text); }
+  .text-ink-base      { color: var(--ink-text); }   /* legacy alias */
   .text-ink-muted     { color: var(--ink-muted); }
   .text-ink-subtle    { color: var(--ink-subtle); }
   .text-ink-accent    { color: var(--ink-accent); }
+  .text-ink-accent-link { color: var(--ink-accent-text); }
+  .bg-ink-base        { background-color: var(--ink-base); }
   .bg-ink-surface     { background-color: var(--ink-surface); }
   .bg-ink-surface-2   { background-color: var(--ink-surface-2); }
   .border-ink         { border-color: var(--ink-border); }
   .border-ink-2       { border-color: var(--ink-border-2); }
+  .border-ink-border  { border-color: var(--ink-border); }
 }
 
 /* ── Scrollbar ─────────────────────────────────────────────── */
