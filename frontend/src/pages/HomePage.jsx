@@ -277,6 +277,142 @@ export const HomePage = () => {
         </div>
       </section>
 
+      {/* ── Government Schemes & Yojanas Showcase ── */}
+      <section
+        className="px-4 sm:px-6 lg:px-8 py-16 border-t relative overflow-hidden"
+        style={{ background: 'var(--ink-base)', borderColor: 'var(--ink-border)' }}
+        aria-label="Government Schemes and Yojanas"
+      >
+        <div className="max-w-5xl mx-auto">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+            <div>
+              <div
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-2 border shadow-sm"
+                style={{
+                  background: 'var(--ink-surface)',
+                  borderColor: 'var(--ink-border)',
+                  color: 'var(--ink-text)',
+                }}
+              >
+                <span>🇮🇳</span>
+                <span style={{ color: 'var(--tricolor-saffron-dark)' }}>CITIZEN BENEFIT ACCESS</span>
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-2">
+                Government Schemes & Yojanas
+              </h2>
+              <p className="text-sm sm:text-base max-w-2xl leading-relaxed" style={{ color: 'var(--ink-muted)' }}>
+                "Transparency is not only about knowing where public money goes. It is also about knowing what public benefits are available to you."
+              </p>
+            </div>
+
+            <Link
+              to="/schemes"
+              className="cl-btn cl-btn--primary flex-shrink-0 self-start md:self-auto flex items-center gap-1.5 no-underline shadow-sm"
+            >
+              <span>Explore Government Schemes</span>
+              <ArrowRight size={15} />
+            </Link>
+          </div>
+
+          {/* 4 Featured Schemes Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            {[
+              {
+                id: 'pm-kisan',
+                name: 'PM-KISAN',
+                gov: 'Central Govt',
+                isCentral: true,
+                cat: 'Agriculture & Farmers',
+                benefit: '₹6,000 / year income support',
+                desc: 'Direct benefit transfer for all eligible landholding farmer families across India.'
+              },
+              {
+                id: 'gruha-lakshmi',
+                name: 'Gruha Lakshmi',
+                gov: 'Karnataka Govt',
+                isCentral: false,
+                cat: 'Women & Welfare',
+                benefit: '₹2,000 / month financial aid',
+                desc: 'Direct financial assistance for women heads of households in Karnataka.'
+              },
+              {
+                id: 'gruha-jyothi',
+                name: 'Gruha Jyothi',
+                gov: 'Karnataka Govt',
+                isCentral: false,
+                cat: 'Electricity & Utilities',
+                benefit: 'Up to 200 units free power',
+                desc: 'Guaranteed zero-bill domestic electricity for residential consumers in Karnataka.'
+              },
+              {
+                id: 'yuva-nidhi',
+                name: 'Yuva Nidhi',
+                gov: 'Karnataka Govt',
+                isCentral: false,
+                cat: 'Jobs & Employment',
+                benefit: '₹3,000 / month youth allowance',
+                desc: 'Unemployment financial aid and skill training for educated youth in Karnataka.'
+              }
+            ].map((scheme) => (
+              <Link
+                key={scheme.id}
+                to={`/schemes/${scheme.id}`}
+                className="cl-card p-5 rounded-xl border flex flex-col justify-between transition-all hover:-translate-y-1 hover:shadow-md no-underline group"
+                style={{
+                  background: 'var(--ink-surface)',
+                  borderColor: 'var(--ink-border)',
+                }}
+              >
+                <div>
+                  <div className="flex items-center justify-between gap-1 mb-2">
+                    <span
+                      className="text-[9px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-wider"
+                      style={{
+                        background: scheme.isCentral ? 'rgba(255, 153, 51, 0.1)' : 'rgba(19, 136, 8, 0.1)',
+                        borderColor: scheme.isCentral ? 'var(--tricolor-saffron-dark)' : 'var(--tricolor-green-dark)',
+                        color: scheme.isCentral ? 'var(--tricolor-saffron-dark)' : 'var(--tricolor-green-dark)',
+                      }}
+                    >
+                      {scheme.gov}
+                    </span>
+                    <span className="text-[10px] font-medium" style={{ color: 'var(--ink-subtle)' }}>
+                      {scheme.cat}
+                    </span>
+                  </div>
+
+                  <h3 className="font-bold text-base mb-1 group-hover:text-ink-accent transition-colors" style={{ color: 'var(--ink-text)' }}>
+                    {scheme.name}
+                  </h3>
+
+                  <p className="text-xs leading-relaxed mb-3" style={{ color: 'var(--ink-muted)' }}>
+                    {scheme.desc}
+                  </p>
+                </div>
+
+                <div className="pt-2.5 border-t flex items-center justify-between text-xs" style={{ borderColor: 'var(--ink-border)' }}>
+                  <span className="font-bold text-[11px]" style={{ color: 'var(--status-completed-text)' }}>
+                    {scheme.benefit}
+                  </span>
+                  <span className="font-semibold text-ink-accent flex items-center gap-0.5 text-[11px]">
+                    Details <ArrowRight size={11} />
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
+
+          <div className="text-center">
+            <Link
+              to="/schemes"
+              className="cl-btn cl-btn--secondary text-xs font-bold inline-flex items-center gap-1.5 no-underline px-5 py-2.5"
+            >
+              <span>View All Central & Karnataka Schemes ({13}+)</span>
+              <ArrowRight size={14} />
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* ── Role access grid ── */}
       <section
         className="px-4 sm:px-6 lg:px-8 py-14 border-t"

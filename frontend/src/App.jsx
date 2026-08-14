@@ -17,6 +17,8 @@ import { SubmitProgressPage } from './pages/SubmitProgressPage';
 import { GovernmentDashboard } from './pages/GovernmentDashboard';
 import { ReviewUpdatePage } from './pages/ReviewUpdatePage';
 import { ManageProjectsPage } from './pages/ManageProjectsPage';
+import { SchemesPage } from './pages/SchemesPage';
+import { SchemeDetailPage } from './pages/SchemeDetailPage';
 
 export function App() {
   return (
@@ -32,6 +34,8 @@ export function App() {
               <Route path="/register" element={<RegisterPage />} />
               <Route path="/explore" element={<ExploreProjectsPage />} />
               <Route path="/civic-projects/:projectId" element={<ProjectDetailPage />} />
+              <Route path="/schemes" element={<SchemesPage />} />
+              <Route path="/schemes/:schemeId" element={<SchemeDetailPage />} />
 
               {/* Role Protected Routes */}
               <Route

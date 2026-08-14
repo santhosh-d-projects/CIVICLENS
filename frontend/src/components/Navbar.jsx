@@ -96,6 +96,7 @@ export const Navbar = () => {
           <nav className="hidden md:flex items-center gap-1" aria-label="Main navigation">
             <NavLink to="/" label="Home" current={location.pathname} />
             <NavLink to="/explore" label="Explore projects" current={location.pathname} />
+            <NavLink to="/schemes" label="Schemes & Yojanas" current={location.pathname} />
             {portal && (
               <NavLink to={portal.path} label={portal.label} current={location.pathname} highlight />
             )}
@@ -177,6 +178,7 @@ export const Navbar = () => {
           <nav className="px-4 py-3 space-y-1" aria-label="Mobile navigation">
             <MobileNavLink to="/" label="Home" onClick={() => setMobileOpen(false)} />
             <MobileNavLink to="/explore" label="Explore projects" onClick={() => setMobileOpen(false)} />
+            <MobileNavLink to="/schemes" label="Schemes & Yojanas" onClick={() => setMobileOpen(false)} />
             {portal && (
               <MobileNavLink to={portal.path} label={portal.label} highlight onClick={() => setMobileOpen(false)} />
             )}
