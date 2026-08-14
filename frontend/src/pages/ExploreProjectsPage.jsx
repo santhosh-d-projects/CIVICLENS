@@ -62,6 +62,14 @@ export const ExploreProjectsPage = () => {
         style={{ borderColor: 'var(--ink-border)', background: 'var(--ink-surface)' }}
       >
         <div className="max-w-7xl mx-auto">
+          <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider mb-2 border"
+            style={{ background: 'var(--ink-surface-2)', borderColor: 'var(--ink-border)', color: 'var(--ink-text)' }}
+          >
+            <span>🇮🇳</span>
+            <span style={{ color: 'var(--tricolor-saffron-dark)' }}>INDEPENDENCE DAY 2026</span>
+            <span style={{ color: 'var(--ink-subtle)' }}>•</span>
+            <span>PUBLIC TRANSPARENCY REGISTRY</span>
+          </div>
           <h1 className="text-2xl font-bold mb-1" style={{ color: 'var(--ink-text)' }}>
             Civic Projects Directory
           </h1>

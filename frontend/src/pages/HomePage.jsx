@@ -1,6 +1,6 @@
 /**
  * CivicLens Homepage — Independence Day 2026 Edition.
- * Design: Elegant Indian Independence Day × Civic Transparency theme.
+ * Design: World-class Indian Independence Day × Civic Transparency theme.
  * Integrates Indian Tricolor (Saffron #FF9933, White #FFFFFF, India Green #138808, Ashoka Chakra Navy #000080)
  * with CivicLens document-style precision and public accountability principles.
  */
@@ -9,22 +9,41 @@ import { Link } from 'react-router-dom';
 import {
   FileText, DollarSign, Activity, ShieldCheck,
   ArrowRight, Eye, CheckCircle2, AlertCircle, Clock,
-  Sparkles, Landmark, Users, Check
+  Sparkles, Landmark, Users, Check, Award
 } from 'lucide-react';
 import { IndiaFlag, AshokaChakra } from '../components/IndiaFlag';
+import { CelebrationOverlay } from '../components/CelebrationOverlay';
+import { FloatingTricolorParticles } from '../components/FloatingTricolorParticles';
 
 export const HomePage = () => {
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: 'var(--ink-base)', color: 'var(--ink-text)' }}>
+    <div className="min-h-screen flex flex-col relative" style={{ background: 'var(--ink-base)', color: 'var(--ink-text)' }}>
+      {/* ── First-Entry Independence Day Celebration Overlay ── */}
+      <CelebrationOverlay />
 
-      {/* ── Hero — Independence Day Showcase ── */}
+      {/* ── Hero — Independence Day Showcase with Ambient Tricolor Glow ── */}
       <section
-        className="border-b px-4 sm:px-6 lg:px-8 py-12 sm:py-16 relative overflow-hidden"
+        className="border-b px-4 sm:px-6 lg:px-8 py-14 sm:py-20 relative overflow-hidden"
         style={{ borderColor: 'var(--ink-border)', background: 'var(--ink-surface)' }}
       >
+        {/* Ambient Tricolor Lighting Mesh */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
+          <div
+            className="absolute -top-24 -left-24 w-96 h-96 rounded-full opacity-10 filter blur-3xl"
+            style={{ background: 'var(--tricolor-saffron)' }}
+          />
+          <div
+            className="absolute -bottom-24 -right-24 w-96 h-96 rounded-full opacity-10 filter blur-3xl"
+            style={{ background: 'var(--tricolor-green)' }}
+          />
+        </div>
+
+        {/* Ambient Floating Tricolor Particles */}
+        <FloatingTricolorParticles count={14} />
+
         {/* Subtle Ashoka Chakra background watermark */}
-        <div className="absolute right-[-40px] top-[-40px] pointer-events-none opacity-5 sm:opacity-10 select-none">
-          <AshokaChakra size={360} spin={true} color="var(--tricolor-navy)" />
+        <div className="absolute right-[-60px] top-[-60px] pointer-events-none opacity-5 sm:opacity-10 select-none">
+          <AshokaChakra size={420} spin={true} color="var(--tricolor-navy)" />
         </div>
 
         <div className="max-w-4xl mx-auto text-center relative z-10">
@@ -50,8 +69,8 @@ export const HomePage = () => {
           </h1>
 
           <p
-            className="text-base sm:text-lg max-w-2xl mx-auto mb-4 leading-relaxed font-medium"
-            style={{ color: 'var(--ink-text)' }}
+            className="text-base sm:text-lg max-w-2xl mx-auto mb-4 leading-relaxed font-semibold"
+            style={{ color: 'var(--ink-accent-text)' }}
           >
             "Building a more transparent India, one public project at a time."
           </p>
@@ -70,7 +89,7 @@ export const HomePage = () => {
             <div className="flex flex-wrap justify-center items-center gap-3">
               <Link
                 to="/explore"
-                className="cl-btn cl-btn--primary no-underline shadow-sm"
+                className="cl-btn cl-btn--primary no-underline shadow-md"
                 aria-label="Browse civic projects"
               >
                 Explore projects <ArrowRight size={15} aria-hidden="true" />
@@ -97,17 +116,17 @@ export const HomePage = () => {
       </section>
 
       {/* ── PROMISE → PROOF concept strip ── */}
-      <section className="px-4 sm:px-6 lg:px-8 py-12" aria-label="Platform overview">
+      <section className="px-4 sm:px-6 lg:px-8 py-14" aria-label="Platform overview">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-8">
-            <h2 className="text-lg font-bold mb-1">From announcement to accountability</h2>
+            <h2 className="text-xl font-bold mb-1">From announcement to accountability</h2>
             <p className="text-sm" style={{ color: 'var(--ink-muted)' }}>
               CivicLens tracks each stage of the public project lifecycle with source citations.
             </p>
           </div>
 
           {/* Concept flow — 4 stages with subtle tricolor sequence */}
-          <div className="flex flex-col sm:flex-row items-stretch gap-0">
+          <div className="flex flex-col sm:flex-row items-stretch gap-0 rounded-lg overflow-hidden border shadow-sm" style={{ borderColor: 'var(--ink-border)' }}>
             {[
               {
                 icon: <FileText size={18} aria-hidden="true" />,
@@ -145,48 +164,39 @@ export const HomePage = () => {
               <React.Fragment key={item.step}>
                 <div
                   className="flex-1 p-5 rounded-none"
-                  style={{ background: 'var(--ink-surface)', border: '1px solid var(--ink-border)' }}
+                  style={{ background: 'var(--ink-surface)', borderRight: i < arr.length - 1 ? '1px solid var(--ink-border)' : 'none' }}
                 >
                   <div className="flex items-center gap-2 mb-3">
                     <span
-                      className="w-8 h-8 rounded flex items-center justify-center flex-shrink-0"
+                      className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
                       style={{ background: 'var(--ink-surface-2)', color: item.accent, border: `1px solid var(--ink-border)` }}
                     >
                       {item.icon}
                     </span>
-                    <span className="font-mono text-xs" style={{ color: 'var(--ink-subtle)' }}>{item.step}</span>
+                    <span className="font-mono text-xs font-bold" style={{ color: 'var(--ink-subtle)' }}>{item.step}</span>
                   </div>
                   <h3 className="font-bold text-base mb-1" style={{ color: 'var(--ink-text)' }}>{item.label}</h3>
-                  <p className="text-sm leading-relaxed" style={{ color: 'var(--ink-muted)' }}>
+                  <p className="text-xs sm:text-sm leading-relaxed" style={{ color: 'var(--ink-muted)' }}>
                     {item.desc}
                   </p>
                 </div>
-                {i < arr.length - 1 && (
-                  <div
-                    className="hidden sm:flex items-center justify-center flex-shrink-0 px-0"
-                    style={{ background: 'var(--ink-surface)', border: '1px solid var(--ink-border)', borderLeft: 'none', borderRight: 'none', width: '28px' }}
-                    aria-hidden="true"
-                  >
-                    <ArrowRight size={14} style={{ color: 'var(--ink-muted)' }} />
-                  </div>
-                )}
               </React.Fragment>
             ))}
           </div>
 
           {/* Operational status note with subtle tricolor border */}
           <div
-            className="mt-4 px-4 py-3 rounded text-xs text-center border"
+            className="mt-4 px-4 py-3 rounded-lg text-xs text-center border"
             style={{ background: 'var(--ink-surface-2)', borderColor: 'var(--ink-border)', color: 'var(--ink-muted)' }}
           >
-            <span className="font-semibold text-ink-text">Civic Transparency Engine:</span> Official records, contractor submissions, citizen observations, and source citations synchronized in real-time.
+            <span className="font-bold text-ink-text">Civic Transparency Engine:</span> Official records, contractor submissions, citizen observations, and source citations synchronized in real-time.
           </div>
         </div>
       </section>
 
       {/* ── Dedicated Independence Day Section: Building a Transparent India ── */}
       <section
-        className="px-4 sm:px-6 lg:px-8 py-14 border-t relative overflow-hidden"
+        className="px-4 sm:px-6 lg:px-8 py-16 border-t relative overflow-hidden"
         style={{ background: 'var(--ink-surface)', borderColor: 'var(--ink-border)' }}
         aria-label="Building a Transparent India"
       >
@@ -232,10 +242,10 @@ export const HomePage = () => {
             ].map((pillar, idx) => (
               <div
                 key={idx}
-                className="cl-card p-5 rounded-lg border transition-transform hover:-translate-y-0.5"
+                className="cl-card p-5 rounded-xl border transition-all hover:-translate-y-0.5 hover:shadow-md"
                 style={{ background: 'var(--ink-surface-2)', borderColor: 'var(--ink-border)' }}
               >
-                <div className="mb-3 p-2 rounded w-fit" style={{ background: 'var(--ink-surface)', border: '1px solid var(--ink-border)' }}>
+                <div className="mb-3 p-2.5 rounded-lg w-fit" style={{ background: 'var(--ink-surface)', border: '1px solid var(--ink-border)' }}>
                   {pillar.icon}
                 </div>
                 <h3 className="font-bold text-sm mb-1.5" style={{ color: 'var(--ink-text)' }}>
@@ -250,17 +260,18 @@ export const HomePage = () => {
 
           {/* Callout Quote */}
           <div
-            className="mt-8 p-4 sm:p-5 rounded-lg border text-center"
+            className="mt-10 p-5 sm:p-6 rounded-xl border text-center relative overflow-hidden"
             style={{
               background: 'var(--ink-surface)',
               borderColor: 'var(--ink-border)'
             }}
           >
-            <p className="text-xs sm:text-sm font-semibold italic" style={{ color: 'var(--ink-text)' }}>
+            <div className="tricolor-strip-subtle absolute top-0 left-0 right-0" />
+            <p className="text-sm sm:text-base font-semibold italic pt-1" style={{ color: 'var(--ink-text)' }}>
               "Transparency strengthens public trust. When commitments are open to all, democracy thrives."
             </p>
-            <p className="font-mono text-[11px] mt-1" style={{ color: 'var(--ink-subtle)' }}>
-              15 AUGUST 2026 • CIVICLENS TRANSPARENCY NETWORK
+            <p className="font-mono text-xs mt-2" style={{ color: 'var(--ink-muted)' }}>
+              🇮🇳 15 AUGUST 2026 • CIVICLENS TRANSPARENCY NETWORK
             </p>
           </div>
         </div>
@@ -268,13 +279,13 @@ export const HomePage = () => {
 
       {/* ── Role access grid ── */}
       <section
-        className="px-4 sm:px-6 lg:px-8 py-12 border-t"
+        className="px-4 sm:px-6 lg:px-8 py-14 border-t"
         style={{ background: 'var(--ink-base)', borderColor: 'var(--ink-border)' }}
         aria-label="Role-based access"
       >
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-8">
-            <h2 className="text-lg font-bold mb-1">Who uses CivicLens</h2>
+            <h2 className="text-xl font-bold mb-1">Who uses CivicLens</h2>
             <p className="text-sm" style={{ color: 'var(--ink-muted)' }}>
               Dedicated portals designed for every stakeholder in public development.
             </p>
@@ -305,15 +316,15 @@ export const HomePage = () => {
             ].map(r => (
               <div
                 key={r.role}
-                className="cl-card p-5 flex flex-col"
+                className="cl-card p-6 flex flex-col rounded-xl hover:shadow-sm transition-all"
               >
                 <span
-                  className="cl-section-label px-2 py-0.5 rounded inline-block mb-3"
+                  className="cl-section-label px-2.5 py-0.5 rounded-full inline-block mb-3 w-fit"
                   style={{ background: 'var(--ink-surface-2)', border: '1px solid var(--ink-border)' }}
                 >
                   {r.role.toUpperCase()}
                 </span>
-                <h3 className="text-base font-semibold mb-2">{r.headline}</h3>
+                <h3 className="text-base font-bold mb-2">{r.headline}</h3>
                 <p className="text-sm leading-relaxed flex-1 mb-5" style={{ color: 'var(--ink-muted)' }}>
                   {r.desc}
                 </p>

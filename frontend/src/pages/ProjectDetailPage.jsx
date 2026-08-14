@@ -139,6 +139,12 @@ export const ProjectDetailPage = () => {
                   {project.category}
                 </span>
                 <StatusPill status={project.status} />
+                <span
+                  className="cl-badge text-xs font-bold"
+                  style={{ background: 'var(--ink-surface-2)', color: 'var(--ink-text)' }}
+                >
+                  🇮🇳 15 AUG 2026
+                </span>
                 {assessment && (
                   <span
                     className="status-pill font-bold tracking-wide text-[10px] uppercase border"

@@ -620,10 +620,24 @@
   user-select: none;
 }
 
+/* Subtle ambient particle float */
+@keyframes float-slow {
+  0% {
+    transform: translateY(0px) translateX(0px);
+  }
+  50% {
+    transform: translateY(-12px) translateX(6px);
+  }
+  100% {
+    transform: translateY(-24px) translateX(-6px);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-chakra-slow,
   .animate-flag-wave {
     animation: none !important;
   }
 }
+
 
